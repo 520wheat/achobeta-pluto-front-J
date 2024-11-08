@@ -1,9 +1,23 @@
-<script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+<script setup>
+    import { useRoute,useRouter } from 'vue-router';
+    import { useUserStore} from '@/stores';
+    const router = useRouter()
+
+    const goList = () =>{
+      router.push('/list')
+
+    }
+
+    const userStore = useUserStore()
 </script>
 
 <template>
-  <HelloWorld msg="Hello Vue 3 + TypeScript + Vite" />
-</template>
 
-<style scoped></style>
+   <router-view></router-view>
+
+</template>
+ 
+<style scoped>
+
+</style>
+ 
