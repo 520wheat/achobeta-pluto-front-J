@@ -2,7 +2,6 @@
     import { useRoute,useRouter } from 'vue-router';
     import { useUserStore} from '@/stores';
     const router = useRouter()
-    const route = useRoute()
 
     const goList = () =>{
       router.push('/list')

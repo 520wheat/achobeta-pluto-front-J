@@ -6,32 +6,25 @@ const formModel=ref({
    Phone: '',
    yzm: ''
 })
-const rules = {
-   Phone: [
-      { required: true,message: '请输入手机号码',trigger: 'change'},
-      { 
-         pattern: /^[1]([3-9])[0-9]{9}$/,
-         message: "请检查手机号码是否正确",
-         trigger: "blur" 
-      }
-   ],
-   yzm: [
-      { required: true,message: '请输入验证码',trigger: 'change'}
-   ]
-}
 const form = ref()
+const reg=/^[1]([3-9])[0-9]{9}$/
 let sending = ref(true);
 let second = ref(5);
 let yzmwz = ref('获取验证码')
-let message = ref('请检查手机号码是否正确')
-const validateForm= () => {
-   form.value.validateField('Phone',(valid) => {
-      if(!valid) 
+let message = ref('')
+const validatePhone = () => {
+  if(!reg.test(formModel.value.Phone)) 
      {  
-        return;
+        message.value='请检查手机号码是否正确'
+        return false;
      }
-     else
+     return true;
+}
+const validateyzm= () => {
+   // form.value.validateField('Phone',(valid) => {
+   if(validatePhone()) 
      {
+      message.value=''
        //向后端发送验证码
          
        //倒计时
@@ -46,12 +39,12 @@ const validateForm= () => {
          }
        },1000)
      }
-   })
-}
+   }
+
 //点击登录
 const login = async () => {
    //登录预校验
-   await form.value.validate()
+   await validatePhone()
    //获取token判断
    // const res = await userLoginService(formModel.value)
 }
@@ -60,7 +53,7 @@ const login = async () => {
 <template>
    <el-row class="login-page">
     <el-col :span="8" class="bg">AchoBeta欢迎您</el-col>
-    <el-col :span="6" :offset="5" class="form">
+    <el-col :span="7" :offset="5" class="form">
      <el-form
         :model="formModel"
         :rules="rules"
@@ -69,27 +62,27 @@ const login = async () => {
         autocomplete="off"
         hide-required-asterisk="true" 
         >
-        <el-form-item label="手机号码" prop="Phone" label-position = "left" label-width="80px">
+        <el-form-item label="手机号码" label-position = "left" label-width="80px">
         <el-input v-model="formModel.Phone"></el-input>
      </el-form-item>
-     <el-form-item label="验证码" prop="yzm" label-position = "left" label-width="80px">
+     <el-form-item label="验证码"  label-position = "left" label-width="80px">
       <div class="flex">
          <el-input v-model="formModel.yzm"></el-input>
-        <el-button v-if="sending" type="text" @click="validateForm">{{yzmwz}}</el-button>
+        <el-button v-if="sending" type="text" @click="validateyzm">{{yzmwz}}</el-button>
         <el-button v-else type="text" disabled="true">{{ second }}s</el-button>
       </div>
      </el-form-item>
      <el-form-item class="flex">
       <div class="flex">
-       <span>{{ message }}</span>
+       <span class="eromes">{{ message }}</span>
        <el-checkbox class="cbox" size="small">三十天内自动登录</el-checkbox>
       </div>
      </el-form-item>
      <el-form-item>
-      <el-button type="primary" style="width: 100%;" @click="login">登录/注册</el-button>
+      <el-button type="primary" class="loginbutton" @click="login">登录/注册</el-button>
      </el-form-item>
       </el-form>
-      <span>未注册手机号登录后将自动注册</span>
+      <span class="foot">未注册手机号登录后将自动注册</span>
     </el-col>
 
    </el-row>
@@ -122,11 +115,21 @@ const login = async () => {
       display: flex;
       justify-content: space-between;
     }
-
-span {
+.eromes {
+   font-size: 13px;
+   color: rgb(245, 108, 108);
+   margin-left: 80px;
+   margin-top: -8px;
+}
+.foot {
    color: cadetblue;
-   margin-left: 65px;
-   font-size: 12px;
+   margin-left: 114px;
+   font-size: 13px;
+}
+.loginbutton {
+   width: 260px;
+   margin-left: 73px;
+   font-size: 16px;
 }
  }
 

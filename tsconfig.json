@@ -37,10 +37,6 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
-    "src/stores/index.js",
-    "src/router/index.js",
-    "src/utils/request.js",
-    "src/stores/modules/user.js",
-    "src/api/user.js"
+    "src/**/*.js",
   ]
 }
