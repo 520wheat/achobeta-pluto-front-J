@@ -3,7 +3,7 @@
 </script>
 <template>
   <el-container class="layout-container">
-    <el-header>
+    <el-header class="header">
         <span>AchoBeta</span>
         <el-dropdown trigger="click">
         <span class="el-dropdown-link">
@@ -38,10 +38,10 @@
   </el-container>
 </template>
 
-<style>
+<style lang="scss" scoped>
 .layout-container{
     height: 100vh;
-  .el-header {
+  .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
