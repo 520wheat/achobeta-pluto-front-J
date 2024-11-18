@@ -14,6 +14,7 @@ let sending = ref(true);
 let second = ref(5);
 let yzmwz = ref('获取验证码')
 let message = ref('')
+const userAgent = navigator.userAgent;
 const validatePhone = () => {
   if(!reg.test(formModel.value.phone)) 
      {  
@@ -28,7 +29,12 @@ const validateyzm= async () => {
      {
       message.value=''
        //向后端请求发送验证码
-         const res = await userSendcodeService(formModel.value.phone)
+         const res = await userSendcodeService(formModel.value.phone).then(res=>{
+            console.log(res.data);
+            //接口的成功事件处理逻辑
+         }).catch(err=>{
+            console.log(err);
+         })
          console.log(res.data)
          
        //倒计时
@@ -55,6 +61,7 @@ const login = async () => {
    // const res = await userLoginService(formModel.value)
 }
 console.log(sessionStorage.getItem('ip'))
+console.log(userAgent)
 </script>
 
 <template>
