@@ -52,7 +52,7 @@
   </el-container>
 </template>
 
-<style>
+<style lang="scss" scoped>
 .layout-container{
     height: 96vh;
     background-color: #f4f4f4;  

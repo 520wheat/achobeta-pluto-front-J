@@ -1,9 +1,11 @@
 <script setup>
 import {ref} from 'vue'
+import {useUserStore} from '@/stores'
+import {userSendcodeService} from '@/api/user.js'
 // import {userLoginService} from '@/api/user.js'
 //整个的用于提交的form数据对象,看接口文档
 const formModel=ref({
-   Phone: '',
+   phone: '',
    yzm: ''
 })
 const form = ref()
@@ -12,20 +14,28 @@ let sending = ref(true);
 let second = ref(5);
 let yzmwz = ref('获取验证码')
 let message = ref('')
+const userAgent = navigator.userAgent;
 const validatePhone = () => {
-  if(!reg.test(formModel.value.Phone)) 
+  if(!reg.test(formModel.value.phone)) 
      {  
         message.value='请检查手机号码是否正确'
         return false;
      }
      return true;
 }
-const validateyzm= () => {
+const validateyzm= async () => {
    // form.value.validateField('Phone',(valid) => {
    if(validatePhone()) 
      {
       message.value=''
-       //向后端发送验证码
+       //向后端请求发送验证码
+         const res = await userSendcodeService(formModel.value.phone).then(res=>{
+            console.log(res.data);
+            //接口的成功事件处理逻辑
+         }).catch(err=>{
+            console.log(err);
+         })
+         console.log(res.data)
          
        //倒计时
        sending.value=false;
@@ -40,14 +50,18 @@ const validateyzm= () => {
        },1000)
      }
    }
-
+const userStore=useUserStore()
 //点击登录
 const login = async () => {
    //登录预校验
-   await validatePhone()
+    if(validatePhone()){
+
+    }
    //获取token判断
    // const res = await userLoginService(formModel.value)
 }
+console.log(sessionStorage.getItem('ip'))
+console.log(userAgent)
 </script>
 
 <template>
@@ -63,7 +77,7 @@ const login = async () => {
         hide-required-asterisk="true" 
         >
         <el-form-item label="手机号码" label-position = "left" label-width="80px">
-        <el-input v-model="formModel.Phone"></el-input>
+        <el-input v-model="formModel.phone"></el-input>
      </el-form-item>
      <el-form-item label="验证码"  label-position = "left" label-width="80px">
       <div class="flex">

@@ -16,6 +16,10 @@ const router = createRouter({
                 {
                     path: '/ManageTeampage',
                     component: () => import('@/components/ManageTeampage.vue')
+                },
+                {
+                    path: '/UserInfEdit',
+                    component: () => import('@/components/UserInfEdit.vue')
                 }
             ]
         }
