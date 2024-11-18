@@ -1,5 +1,10 @@
 <script setup>
   import { ArrowDown } from '@element-plus/icons-vue'
+  import { useRouter } from 'vue-router'
+  const router = useRouter()
+  const goPersonalCenter = () => {
+    router.push('/personalCenter')
+  } 
 </script>
 
 <template>
@@ -18,7 +23,7 @@
           </span>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item>个人中心</el-dropdown-item>
+              <el-dropdown-item @click="goPersonalCenter">个人中心</el-dropdown-item>
               <el-dropdown-item>常用设备</el-dropdown-item>
               <el-dropdown-item><span style="text-align: center;">登出</span></el-dropdown-item>
             </el-dropdown-menu>

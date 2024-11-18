@@ -9,8 +9,7 @@
       :size="formSize"
       status-icon
     >
-      <router-link to="/main" style="display:flex;"><span style="font-weight: bold;font-size: 20px;">个人信息</span></router-link>
-      <el-button type="primary" @click="goHome">返回</el-button>
+      <el-button @click="goMain">个人信息</el-button>
       <!-- 姓名 -->
       <el-form-item label="真实姓名" prop="name">
         <el-input v-model="ruleForm.name" />
@@ -72,7 +71,8 @@
   </template>
   
   <script lang="ts" setup>
-  import { reactive, ref } from 'vue'
+  import { reactive, ref } from 'vue' 
+  import { useRouter } from 'vue-router'
   import type { ComponentSize, FormInstance, FormRules } from 'element-plus'
   
   interface RuleForm {
@@ -192,6 +192,11 @@
     if (!formEl) return
     formEl.resetFields()
   }
+
+  const goMain = () => {
+    router.push('/main')
+  } 
+
   </script>
   
   <style scoped>
