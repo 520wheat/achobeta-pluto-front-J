@@ -20,9 +20,14 @@ const router = createRouter({
                 {
                     path: '/UserInfEdit',
                     component: () => import('@/components/UserInfEdit.vue')
-                }
+                },
+                {
+                    path: '/PersonalCenter',
+                    component: () => import('@/components/PersonalCenter.vue')
+                }   
             ]
         }
+        
     ]
 })
 

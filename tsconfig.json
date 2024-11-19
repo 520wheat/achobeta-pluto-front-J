@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "types":["vue","element-plus"],
     "target": "ES2020",
     "jsx": "preserve",
     "lib": [
@@ -10,8 +11,9 @@
     "useDefineForClassFields": true,
     "module": "ESNext",
     /* Bundler mode */
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
+    "esModuleInterop": true,
     "allowImportingTsExtensions": true,
     /* Linting */
     "strict": true,
