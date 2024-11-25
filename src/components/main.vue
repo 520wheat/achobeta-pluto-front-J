@@ -1,10 +1,15 @@
-<script>
+<script setup>
 import axios from 'axios';
 import { stringify } from 'postcss';
-
+import { ref, onUnmounted } from 'vue';
+import ElementPlus from 'element-plus'
+import { ElButton, ElTable, ElTableColumn, ElMessage } from 'element-plus'
+import 'element-plus/dist/index.css'
+import { useRoute } from 'vue-router';  
 
 /* 飞书多维表格API -- begin */
-async function getAppAccessToken() {
+//获取app_access_token
+let getAppAccessToken = async () => {
     const response = await fetch('/open-apis/auth/v3/app_access_token/internal',{
         method: 'POST',
         headers:{
@@ -21,269 +26,255 @@ async function getAppAccessToken() {
     return data.app_access_token;
 }
 
-//获取登录预授权码
-async function getLoginCode() {
-    let redirect_uri = 'https://127.0.0.1:5173/main';
-    redirect_uri = encodeURIComponent(redirect_uri);
-    const response = await fetch(`/open-apis/authen/v1/authorize?app_id=cli_a7be0d481e3cd00c&redirect_uri=${redirect_uri}&scope=bitable:app`,{
-        method: 'GET',
-    }); 
-    
-
-    const data = await response.json();
-    // console.log(data);
-    return data.login_code; 
-}
-
-async function accessToken() {
-    let token = await getAppAccessToken();
-    let code = await getLoginCode();
-
-    const response = await fetch('/open-apis/authen/v1/oidc/access_token',{
+//获取tenant_access_token
+let getTenantAccessToken = async () => {
+    const response = await fetch(`/open-apis/auth/v3/tenant_access_token/internal`,{ 
         method: 'POST',
         headers:{
-            'Content-Type': "application/json; charset=utf-8",
-            'Authorization':token
+            'Content-Type': "application/json; charset=utf-8"
         },
         body: JSON.stringify({
-            grant_type: 'authorization_code',
-            code: code,
+            app_id: 'cli_a7be0d481e3cd00c',
+            app_secret: 'om6ZIgZNSS5xLcavK6pSjdq6SJRAPTon'
         })
-    });
-
+    }); 
     const data = await response.json();
-    return data.user_access_token;
+    return data.tenant_access_token;
 }
-
-
-// //刷新user_token
-// async function refreshToken() {
-//     let token = await getAppAccessToken();
-
-//     const response = await fetch('/open-apis/authen/v1/oidc/refresh_access_token',{
-//         method: 'POST',
-//         headers:{
-//             'Content-Type': "application/json; charset=utf-8",
-//             'Authorization':token
-//         },
-//         body: JSON.stringify({
-//             grant_type: 'refresh_token',
-//             refresh_token: refresh_token
-//         })
-//     });
-
-//     const data = await response.json();
-//     return data.user_access_token;
-// }
-
-// //获取表格元数据
-// async function getSheetData(user_access_Token) {
-
-//     const response = await fetch('/open-apis/bitable/v1/apps/M5l2bHYEiaYq2esmVM1cTyamn5s',{
-//         method: 'GET',
-//         headers:{
-//             'Authorization': `Bearer ${user_access_Token}`,
-//         }
-//     });
-
-//     const data = await response.json();
-//     return data.spreadsheets;
-// }
 
 //查询记录
-async function queryRecords(){
-    //获取access_token
-    const access_Token = await accessToken();
-    const app_token = 'M5l2bHYEiaYq2esmVM1cTyamn5s';
-    const table_id = 'tblM1AuOpuhpxBSb';
-
-    const response = await fetch(`/open-apis/bitable/v1/apps/${app_token}/tables/${table_id}/records/search`,{
+let getRecord = async () => {
+    const tenantAccessToken = await getTenantAccessToken();
+    const response = await fetch(`/open-apis/bitable/v1/apps/M5l2bHYEiaYq2esmVM1cTyamn5s/tables/tblM1AuOpuhpxBSb/records/search`,{     
         method: 'POST',
         headers:{
-            'Content-Type': "application/json; charset=utf-8",
-            'Authorization': `Bearer ${access_Token}`,
-        }
-    });
-
+            Authorization: `Bearer ${tenantAccessToken}`,
+            'Content-Type': "application/json; charset=utf-8"
+        },
+        body:JSON.stringify({
+            view_id:'vewqjDXwMS',
+            field_names:['当前状态','负责人','预计结束时间'],
+            automatic_fields:false
+        })
+    }); 
+    console.log(tenantAccessToken);
     const data = await response.json();
-    const Data = {
-        queryRecords: data.queryRecords,
-        access_Token: access_Token
-    }
-    return Data;
+    console.log(data);
+    
+    return data.data.items.map(item => item.record_id);
+    // return data.data.items[0].record_id;
 }
 
-//获取多维表格记录
-async function getSheetRecords() {
+//批量获取记录
+// let getRecords = async () => {
+//     const tenantAccessToken = await getTenantAccessToken();
+//     let recordIds = await getRecord();
+//     recordIds = recordIds.slice(0,4);
+//     console.log(recordIds);
+    
+//     const response = await fetch(`/open-apis/bitable/v1/apps/M5l2bHYEiaYq2esmVM1cTyamn5s/tables/tblM1AuOpuhpxBSb/records/batch_get`,{
+//         method: 'POST',
+//         headers:{
+//             'Authorization': `Bearer ${tenantAccessToken}`,
+//             'Content-Type': "application/json; charset=utf-8",
+//         },
+//         body: JSON.stringify({
+//             record_ids: recordIds,
+//             // record_ids: [`${recordIds}`],
+//             // with_shared_url: false,
+//             // user_id_type: 'open_id',
+//             // automatic_fields: false
+//         })
+//     }); 
+//     const data = await response.json();
+//     console.log(data.data);
+    
+//     return data;
+// }
 
-    // const user_Token = await accessToken();
-    // const queryRecord = await queryRecords();
-    const Data = await queryRecords();
-    const query_Records = Data.queryRecords;
-    const access_Token = Data.access_Token;
-    // getSheetData(user_Token);
+//更新项目进度中的数据
 
-    const response = await fetch('/open-apis/bitable/v1/apps/M5l2bHYEiaYq2esmVM1cTyamn5s/tables/tbl_a7be0d481e3cd00c/records/batch_get',{
-        method: 'POST',
-        headers:{
-            'Authorization': `Bearer ${access_Token}`,
-            'Content-Type': "application/json; charset=utf-8",
-        },
-        body: JSON.stringify({
-            "record_ids": query_Records,
-            "user_id_type": "open_id",
-            "with_shared_url": true,
-            "automatic_fields": true
-        }),
-    });
+
+
+let updateProjectProgress = async () => {
+    // const GetRecords = await getRecords();
+    // const records = GetRecords.items;
+    let records = await getRecord();
+    
+    if(records.data.items.fields.负责人 === "姚焕增"){
+        // 姓名匹配负责人，然后更新项目进度中的数据,距离结束时间3天内的为即将逾期，已逾期为距离结束时间超过当前时间
+        let totalTasks = records.length;
+        let unfinishedTasks = records.filter(record => record.fields['当前状态'] !== 'Completed').length;
+        let soonOverdue = records.filter(record => new Date(record.fields['预计结束时间']) < new Date(new Date().getTime() + (3*24*60*60*1000)) && new Date(record.fields['预计结束时间']) >= new Date()).length;
+        let overdue = records.filter(record => new Date(record.fields['预计结束时间']) < new Date()).length;
+    }
     
 
-    const data = await response.json();
-    return data.records;
+    console.log(`Total Tasks: ${totalTasks}, Unfinished Tasks: ${unfinishedTasks}, Soon Overdue: ${soonOverdue}, Overdue: ${overdue}`);
 }
 
-
-
-async function updateTaskData(){
-    try{
-        //获取access_token
-        // const accessToken =  await getAppAccessToken();
-
-        //获取表格数据
-        //const spreadsheetToken = 'cli_a7be0d481e3cd00c';
-        const sheetData = await getSheetRecords();
-
-        const taskData = {
-            totalTasks: sheetData.total_tasks || 0,
-            unfinishedTasks: sheetData.unfinished_tasks || 0,
-            soonOverdue: sheetData.soon_overdue || 0,
-            overdue: sheetData.overdue || 0
-        };
-
-        //更新数据
-        document.getElementById('totalTasks').textContent = taskData.totalTasks;
-        document.getElementById('unfinishedTasks').textContent = taskData.unfinishedTasks;
-        document.getElementById('soonOverdue').textContent = taskData.soonOverdue;
-        document.getElementById('overdue').textContent = taskData.overdue;
-    }catch(error){
-        console.error('Error updating task data:',error);
-    }
-}
-
-updateTaskData();
+updateProjectProgress();
 
 /* 飞书多维表格API -- end */
 
 
 /* 消息 -- begin */
-export default{
-    data() {
-        return {
-            messages: [{
-                id: 1,
-                title: '系统通知',
-                content: '您有新的任务需要完成',
-                type:'system',
-                read: false,
-            },{
-                id: 2,
-                title: '团队通知',
-                content: '团队会议即将开始',
-                type: 'team',
-                read: false,
-            },{
-                id: 2,
-                title: '团队通知',
-                content: '团队会议即将开始',
-                type: 'team',
-                read: false,
-            },{
-                id: 2,
-                title: '团队通知',
-                content: '团队会议即将开始',
-                type: 'team',
-                read: false,
-            },{
-                id: 2,
-                title: '团队通知',
-                content: '团队会议即将开始',
-                type: 'team',
-                read: false,
+const inf_s = ref([
+  { userId: '1', content: 'Welcome to the system!', isRead: false, type: 0 },
+  { userId: '2', content: 'Your report has been approved.', isRead: true, type: 1 },
+  { userId: '3', content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 1 },
+  { userId: '4', content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 0 },
+  { userId: '5', content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 1 },
+  { userId: '6', content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 0 },
+  { userId: '7', content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 1 },
+  { userId: '8', content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 1 },
+  { userId: '9', content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 1 },
+  { userId: '10', content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 0 },   
+]);
+const totalInf = ref(0);//总消息数
+const currentPage = ref(1);//当前页码
+const totalPage = ref(1);//总页数
+const showInfDetail = ref(false);//是否显示消息详情
+const infContent = ref('');//消息详情内容
+
+const timestamp = ref(0);//时间戳
+let intervalId = null;//定时器ID
+const userToken = localStorage.getItem('userToken') ||  '';//用户token
+
+//后端接口，记得定义
+
+
+
+
+//获取当前消息列表
+const fetchInfList = async (page = 1) => {
+    try {
+        const data = await getInfList(userToken, page, timestamp.value);
+        if (data?.code === 200) {// 添加空值检查，如果 inf_s 未定义则使用空数组            
+            const messages = data.data?.inf_s || [];
+            if (messages.length > 0) {
+                inf_s.value = messages.filter((msg) => msg?.content);
+                totalPage.value = data.data?.total_page || 1;
+                totalInf.value = data.data?.total || 0; // 假设后端返回 total 表示总记录数
+            } else {
+                // 如果没有消息，设置默认值
+                inf_s.value = [];
+                totalPage.value = 1;
+                totalInf.value = 0;
             }
-        ],
-            loading: false,
-            noMoreData: false,
-            curPage: 1,
-            pageSize: 5,           
-        };
-    },
-    methods: {
-        //更新数据
-        async fetchMessages() {
-            //防止重复请求
-            if(this.loading || this.noMoreData) return;
+        } else {
+            console.error('获取消息列表失败', data?.text);
+            inf_s.value = []; // 错误情况下设置为空数组
+            totalInf.value = 0;
+        }
+    } catch (error) {
+        console.error('获取消息列表失败', error);
+        inf_s.value = []; // 错误情况下设置为空数组
+        totalInf.value = 0;
+    }
+}
 
-            this.loading = true;
-            try{
-                const response = await axios.get(`https://`,{
-                    params:{
-                        page: this.curPage,
-                        pageSize: this.pageSize,
-                    },
-                });
-
-                const newMessages = response.data.messages;
-
-                //返回的新的消息条数小于每页规定的的条数，说明已经没有更多数据了
-                if(newMessages.length < this.pageSize){
-                    this.noMoreData = true;
-                }
-
-                //将新申请的数据加到已有的里面
-                this.messages = [...this.messages,...newMessages];
-            }catch(error){
-                console.error('获取消息失败',error);
-            }finally{
-                this.loading = false;
-            }
-        },
-
-        //滚动事件
-        handleScroll(event){
-            const container = event.target;
-            const bottom = container.scrollHeight === container.scrollTop + container.clientHeight;
-
-            //到底部且不是正在加载数据时，加载新数据
-            if(bottom && !this.loading &&!this.noMoreData){
-                this.fetchMessages();
-            }
-        },
-
-        //消息标记为已读
-        markAsRead(message){
-            if(!message.read){
-                message.read = true;
-            }
-        },
-
-        //全部标记为已读
-        markAllAsRead(){
-            this.messages.forEach(message => {
-                message.read = true;
-            });
-        },
-
-        //翻页,改变页码的时候会进行分页加载
-        changePage(page){
-            if(page < 1 && page === this.curPage)   return;
-
-            this.curPage = page;
-            this.messages = [];//要清空当前的数据
-            this.noMoreData = false;//重置有无更多信息的标志
-            this.fetchMessages();
-        },
-    },
+//翻页重新获取数据
+const handleCurrentChange = async (page) => {
+    currentPage.value = page;
+    await fetchInfList(page);
 };
+
+//全部已读
+const readAll = async () => {
+    if (!inf_s.value.length) return; // 如果没有消息，直接返回
+    
+    const unreadInf = inf_s.value.filter((msg) => !msg.isRead);
+    if (!unreadInf.length) return; // 如果没有未读消息，直接返回
+    
+    const userIds = unreadInf.map((msg) => msg.userId);
+
+    try {
+        const data = await readInf(userIds);
+        if (data?.code === 200) {
+            unreadInf.forEach((msg) => (msg.isRead = true));
+        } else {
+            throw new Error(data?.message || '后端返回错误');
+        }
+    } catch (error) {
+        console.error('全部已读失败', error);
+        ElMessage.error('标记全部已读失败，请稍后重试');
+    }
+}
+
+//消息已读
+const handleInfClick = async (inf) => {
+    if (!inf) return;
+    
+    infContent.value = inf.content;
+    showInfDetail.value = true;
+
+    if (!inf.isRead) {
+        try {
+            const data = await readInf([inf.userId]);
+            if (data?.code === 200) {
+                inf.isRead = true;
+            } else {
+                throw new Error(data?.message || '标记已读失败');
+            }
+        } catch (error) {
+            console.error('消息已读失败', error);
+            ElMessage.error('标记已读失败，请稍后重试');
+        }
+    }
+};
+
+//关闭消息详情
+const closeInf = () => {
+    showInfDetail.value = false;
+};  
+
+//定时检查更新
+const checkUpdate = async () => {
+    if (!userToken) return; // 如果没有token，不执行检查
+    
+    try {
+        const data = await getInfList(userToken, 1, timestamp.value);
+        if (data?.code === 200 && data.data?.isUpdate) {
+            await fetchInfList(currentPage.value);
+            // 可选：有新消息时提醒用户
+            ElMessage.info('收到新消息');
+        }
+    } catch (error) {
+        console.error('定时检查更新失败', error);
+    }
+};
+
+//启动定时检查
+const startCheckForUpdate = () => {
+    // 清除可能存在的旧定时器
+    if (intervalId) {
+        clearInterval(intervalId);
+    }
+
+    // 页面可见性变化监听
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            clearInterval(intervalId);
+        } else {
+            intervalId = setInterval(checkUpdate, 60000); // 每分钟检查一次
+            checkUpdate(); // 立即检查一次
+        }
+    });
+
+    // 初始启动定时器
+    if (!document.hidden) {
+        intervalId = setInterval(checkUpdate, 60000);
+        checkUpdate(); // 立即检查一次
+    }
+};
+
+// 组件卸载时清理定时器
+onUnmounted(() => {
+    if (intervalId) {
+        clearInterval(intervalId);
+    }
+});
 
 /* 消息 -- end */
 
@@ -301,7 +292,7 @@ export default{
                 <p style="text-indent: 47%;font-size: 20px;">0</p>
             </div>
             <div class="temp">
-                <p>本月排名</p>
+                <p>月排名</p>
                 <p style="text-indent: 47%;font-size: 20px;">0</p>
             </div>
             <div class="temp">
@@ -317,34 +308,68 @@ export default{
 
 
     <div class="information">
-        <p>消息</p>
-        <div class="message-container" @scroll="handleScroll">
-            <!-- 消息列表 -->
-             <div v-for="(message,index) in messages" :key="message.id"
-                    :class="['message',{unread: !message.read,'system-notice':message.type==='team'}]"
-                    @click="markAsRead(message)">
-
-                <div class="message-title">{{ message.title }}</div>
-                <div class="message-content">{{ message.content }}</div>
-                <div v-if="!message.read" class="status-dot"></div>
-            </div>
-
-            <!-- 加载中 -->
-             <div v-if="loading" class="loading">加载中…………</div>
-
-            <!-- 已经展示所有消息 -->
-             <div v-if="noMoreData" class="no-more">已经到底了>_<</div>
-
-            <!-- 翻页 -->
-             <div v-if="!loading && !noMoreData" class="pagination">
-                <button @click="changePage(curPage - 1)" :disabled="curPage <=1">上一页</button>
-                <span>页码：{{ curPage }}</span>
-                <button @click="changePage(curPage + 1)" :disabled="noMoreData">下一页</button>
-             </div>
-
-            <!-- 全部已读 -->
-             <button v-if="messages.length > 0 && !loading" @click="markAllAsRead" class="mark-all-read">全部已读</button>
+        
+        <div class="title">
+            <h3 class="inf-title">消息</h3>
+            <el-button type="primary" text class="read-all" @click="readAll">全部已读</el-button>
         </div>
+
+        <!-- 消息列表 -->
+         <ul class="inf-list">
+            <li
+              v-for="inf in inf_s"
+              :key="inf.userId"
+              class="inf-item"
+            >
+                <div class="dot-content" @click="handleInfClick(inf)">
+                    <span v-if="!inf.isRead" class="unread-dot"></span>
+                    <span :class="['inf-content',{read:inf.isRead}]">
+                        {{inf.length > 25
+                            ? inf.content.sliderContextKey(0,25) + '...'
+                            :inf.content
+                        }}
+                    </span>
+                </div>
+                <div class="inf-tag">
+                    <span
+                        :class="['inf-type',{system:inf.type === 0,type:inf.type === 1}]"
+                    >
+                        {{inf.type === 0 ? '系统通知' : '团队通知'}}
+                    </span>
+                </div>
+            </li>
+            <p v-if="inf_s?.value?.length" class="no-data">暂无消息</p>
+         </ul>
+
+        <!-- 分页 -->
+         <div class="inf-pagination">
+            <!-- <el-pagination
+                layout="prev, pager, next"
+                :total="totalInf"
+                :page-size="5"
+                :current-page="currentPage"
+                @current-change="handleCurrentChange"
+            /> -->
+            <el-pagination
+                :page-size="5"
+                layout="prev, pager, next"
+                :total="totalInf"
+            />  
+         </div>
+
+         <!-- 弹窗  -->
+          <el-dialog
+            v-model="showInfDetail"
+            title="消息详情"
+            width="500px"
+            align-center
+            class="inf-detail"
+          >
+            <p class="inf-text">{{ infContent }}</p>
+            <template #footer>
+                <el-button @click="closeInf" class="inf-close">关闭</el-button>
+            </template>
+          </el-dialog>
     </div>
 
 
@@ -405,7 +430,7 @@ export default{
 
     .temp {
         flex: 1 1 calc(50% - 20px);
-        height: 80px;
+        height: 20%;
         width: 40%;
         background-color: #ffffff;
         color: rgb(0, 0, 0);
@@ -423,24 +448,8 @@ export default{
     }
 }
 
-
-
-.information {
-    width: 49.5%;
-    height: 50%;
-    display: flex;
-    font-size: 15px;
-    color: #000;
-    background-color: #fff;
-    text-indent:20px;
-    font-weight:bold;
-    margin-left: 2px;
-
-    float: left;
-}
-
 .project {
-    width: 100%;
+    width: 98.5%;
     height: 30%;
     font-size: 15px;
     color: #000;
@@ -481,112 +490,186 @@ export default{
 
 
 /* 消息模块--begin */
-.message-container{
-    max-height: 500px;
-    overflow-y: auto;
-    padding: 10px;
-    position: relative;
-}
-
-.message{
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    position: relative;
-}
-
-.message-title{
-    font-weight: bold;
-    font-size: 14px;
-}
-
-.message-content{
-    font-size: 12px;
-    color: #555;
-}
-
-.status-dot{
-    width: 8px;
-    height: 8px;
-    background-color: red;
-    border-radius: 50%;
-    position: absolute;
-    top: 10px;
-    right: 10px;
-}
-
-.message.unread{
-    background-color: #f8f8f8;
-    border: 1px solid #007bff;
-}
-
-.message.read{
-    background-color: #f1f1f1;
-    border: 1px solid #ccc;
-}
-
-.message.system-notice{
-    background-color: #e7f3fe;
-}
-
-.message.team-notice{
-    background-color: #fff3cd;
-}
-
-.loading{
-    text-align: center;
-    padding: 10px;
-}
-
-.no-more{
-    text-align: center;
-    padding: 10px;
-    color: gray;
-}
-
-.pagination{
-    text-align: center;
-    margin-top: 20px;
-    padding-top: 10px;
-    position: sticky;
-    bottom: 0;
+.information {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: space-between;/* 垂直居中 */
     background-color: #fff;
-    z-index: 10;
-    border-top: 1px solid #ddd;
+    height: 50%;
+    width: 49%;
+
+    .title {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 10px;
+    }
+
+    .inf-title {
+        font-size: 15px;
+        color: #000;
+        font-weight: bold;
+        text-indent: 20px;
+        float: left;
+    }
+
+    .read-all {
+        float: right;
+        margin-top: 10px;
+        margin-right: 20px;
+    }
+
+    .inf-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        overflow-y: auto;
+        max-height: 250px;
+    }
+
+    .inf-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        padding: 1px 20px;
+    }
+
+    .dot-content {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .unread-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: red;
+    }   
+
+    .inf-content {
+        color: #000;
+    }
+
+    .inf-content.read {
+        color: #999;
+    }   
+
+    .inf-tag {
+        padding: 5px 10px;
+        border-radius: 5px;
+        color: #fff;
+        font-size: 12px;
+    }
+
+    .inf-type.system {
+        background-color: #67c23a;
+        color: #fff;
+        border-radius: 12px;
+        padding: 5px 10px;
+        font-size: 12px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .inf-type.system:hover {
+        background-color: #85ce61;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .inf-type.type {
+        background-color: #409eff;
+        color: #fff;
+        border-radius: 12px;
+        padding: 5px 10px;
+        font-size: 12px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);   
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }   
+
+    .inf-type.type:hover {
+        background-color: #66b1ff;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    /* 分页容器 */
+    .inf-pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 20%;
+    }   
+
+    .no-data {
+        text-align: center;
+        margin-top: 20px;
+        color: #999;
+        font-size: 14px;    
+    }   
+
+    /* 弹窗样式 */
+    ::v-deep(.el-dialog) {
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        background-color: #fff;
+        overflow: hidden;
+        animation: fadeIn 0.5s ease;    
+    } 
+    
+    /* 弹窗标题 */
+    ::v-deep(.inf-detail .el-dialog__title) {
+        color: #333;
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        text-align: center;
+        border-bottom: 2px dashed #cccccc;
+    }   
+
+    /* 关闭按钮 */
+    ::v-deep(.inf-detail .el-dialog__close) {
+        font-size: 20px;
+        color: #555;
+        transition: color 0.3s ease;
+    }
+
+    ::v-deep(.inf-detail .el-dialog__close:hover) {
+        color: #f56c6c;
+    }
+
+    /* 弹窗内容 */
+    ::v-deep(.inf-detail .el-dialog__body) {
+        padding: 15px 20px;
+        font-size: 14px;
+        color: #333;
+        line-height: 1.5;
+        text-align: left;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        margin: 10px;
+    }
+
+    /* 添加分页组件样式 */
+    :deep(.el-pagination) {
+        justify-content: center;
+        padding: 0;
+        margin: 0;
+    }
+
+    :deep(.el-pagination .el-pager li) {
+        background-color: transparent;
+    }
+
+    :deep(.el-pagination .el-pager li.active) {
+        color: #409eff;
+        font-weight: bold;
+    }
 }
 
-.pagination button{
-    padding: 5px 10px;
-    margin: 0 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.pagination button:disabled{
-    background-color: #ccc;
-    cursor: not-allowed;
-}
-
-.mark-all-read{
-    background-color: #007bff;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 10px auto;
-    display: block;
-}
-
-.mark-all-read:hover{
-    background-color: #0056b3;
-}
+/* 消息模块--end */ 
 
 
 
