@@ -1,28 +1,37 @@
-<script setup>
+<script setup >
 import router from '@/router/index.js'
-import {ref} from 'vue'
+import {ref,toRefs} from 'vue'
+import { useRoute } from 'vue-router';
+let route = useRoute()
+console.log(route.query);
+const memberId=route.query.memberId
+const userId=ref('1001')
+const teamId = ref('0001')
  const toManageTeamPage = () => {
      router.push({
-      path: 'ManageTeampage'
+      path: '/ManageTeampage'
      })
    }
+const form = ref()
 const formModel=ref({
-   name: '',
-   sex: '',
-   time:'',
-   idcard:'',
+   userName: '',
+   gender: '',
+   entryTime:'',
+   idCard:'',
    phone:'',
    email:'',
    grade:'',
    major:'',
-   stnumber:'',
+   studentId:'',
+   experience:'',
+   currentStatus:''
 })
 const rules = {
     phone: [
         { required: true,message: '手机号为必填项',trigger:'change' },
         { pattern: /^[1]([3-9])[0-9]{9}$/, message: '请检查是否为中国大陆手机号',trigger:'change'}
     ],
-    time: [
+    entryTime: [
         { 
             pattern :/^((\d{4})\/(0[13578]|1[02])\/(0[1-9]|[12]\d|3[01])|(\d{4})\/(0[469]|11)\/(0[1-9]|[12]\d|30)|(\d{4})\/02\/(0[1-9]|1\d|2[0-8])|(((\d{2}(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00))\/02\/29))$)/,
             message:'格式为xxxx/xx/xx',
@@ -35,16 +44,20 @@ const reset = () => {
         formModel.value[key]=''
     }
 }
+const save = async () =>{
+    await form.value.validate()
+    console.log(1);
+}
 </script>
 
 <template>
     <el-header class="UserHeader">
     <span>
-        <el-button type="text" text="plain" size="large" @click="toManageTeamPage" >&lt;</el-button>个人信息
+        <el-button type="text" text="plain" size="large" @click="toManageTeamPage()" >&lt;</el-button>个人信息
     </span>
     <div class="right">
       <el-button type="info" class="cz" @click="reset">重置</el-button>
-      <el-button class="bc" color="rgb(0, 122, 255)">保存</el-button>
+      <el-button class="bc" color="rgb(0, 122, 255)" @click="save">保存</el-button>
     </div>
     </el-header>
     <el-main>
@@ -59,12 +72,12 @@ const reset = () => {
            <el-row :gutter="50">
                 <el-col :span="7">
                     <el-form-item label="真实姓名" label-position="top">
-                        <el-input v-model="formModel.name"></el-input>
+                        <el-input v-model="formModel.userName"></el-input>
                     </el-form-item>
                 </el-col>
                 <el-col :span="4">
                     <el-form-item label="性别" label-position="top">
-                        <el-select v-model="formModel.sex" placeholder="未选择" >
+                        <el-select v-model="formModel.gender" placeholder="未选择" >
                             <el-option label="男" value="男"></el-option>
                             <el-option label="女" value="女"></el-option>
                             <el-option label="未选择" value="未选择"></el-option>
@@ -74,8 +87,8 @@ const reset = () => {
             </el-row>
             <el-row :gutter="50">
                 <el-col :span="7">
-                    <el-form-item label="加入时间" prop="time" label-position="top">
-                        <el-input v-model="formModel.time"></el-input>
+                    <el-form-item label="加入时间" prop="entryTime" label-position="top">
+                        <el-input v-model="formModel.entryTime"></el-input>
                     </el-form-item>
                 </el-col>
                 <el-col :span="7">
@@ -98,7 +111,7 @@ const reset = () => {
             <el-row :gutter="50">
                 <el-col :span="7">
                     <el-form-item label="身份证号" label-position="top">
-                        <el-input v-model="formModel.idcard"></el-input>
+                        <el-input v-model="formModel.idCard"></el-input>
                     </el-form-item>
                 </el-col>
                 <el-col :span="7">
@@ -125,7 +138,7 @@ const reset = () => {
                 </el-col>
                  <el-col :span="7">
                     <el-form-item label="学号" label-position="top">
-                        <el-input v-model="formModel.stnumber"></el-input>
+                        <el-input v-model="formModel.studentId"></el-input>
                     </el-form-item>
                 </el-col>
             </el-row>
@@ -134,6 +147,7 @@ const reset = () => {
                  type="textarea"
                  :rows="4"
                  resize="none"
+                 v-model="formModel.experience"
                 ></el-input>
             </el-form-item>
             <el-form-item label="现状" label-position="top">
@@ -141,6 +155,7 @@ const reset = () => {
                  type="textarea"
                  :rows="3"
                  resize="none"
+                 v-model="formModel.currentStatus"
                 ></el-input>
             </el-form-item>
         </el-form>

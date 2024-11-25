@@ -3,11 +3,11 @@ import { useUserStore } from '@/stores'
 import { getRefresh } from '@/api/user.js'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
-const baseURL = 'http://localhost8091'
+// const baseURL = ''
 const userStore = useUserStore()
 const instance = axios.create({
     //基础地址，超时时间
-    baseURL,
+    // baseURL,
     timeout: 10000,
 
 })
@@ -18,14 +18,16 @@ instance.interceptors.request.use(
         //携带token
         // const userStore = useUserStore()
         // if (config.url !== '/LoginPage') {
-        //     config.headers.Authorization = userStore.token
+        //     config.headers.Authorization = userStore.accesstoken
         // }
         // if (config.url === '/refresh_token') {
         //     config.headers.Authorization = userStore.refreshToken
         // }
         return config
     },
-    (err) => Promise.reject(err)
+    (err) => {
+        return Promise.reject(err)
+    }
 )
 let isRefreshing = false;//标记是否正在刷新token
 //响应拦截器
@@ -63,7 +65,7 @@ instance.interceptors.response.use(
         //         }
         //     }
         // }
-        // return res;
+        return res;
     },
     (err) => {
         return Promise.reject(err)

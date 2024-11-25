@@ -1,19 +1,35 @@
 <script setup>
 import {ref} from 'vue'
 import {useUserStore} from '@/stores'
-import {userSendcodeService} from '@/api/user.js'
-// import {userLoginService} from '@/api/user.js'
+import {userSendcodeService,userLoginService} from '@/api/user.js'
+import FingerprintJS from '@fingerprintjs/fingerprintjs'
+//浏览器指纹
+const fingerPrinting=ref('')
+FingerprintJS.load().then(fp => {
+    fp.get().then(result => {
+        fingerPrinting.value = result.visitorId;
+        console.log(fingerPrinting.value);
+    });
+});
 //整个的用于提交的form数据对象,看接口文档
 const formModel=ref({
-   phone: '',
-   yzm: ''
+   phone: '13025316516',
+   code: ''
 })
 const form = ref()
 const reg=/^[1]([3-9])[0-9]{9}$/
+const codeReg=/^\d{6}$/
 let sending = ref(true);
 let second = ref(5);
-let yzmwz = ref('获取验证码')
+let codewz = ref('获取验证码')
 let message = ref('')
+const ip= sessionStorage.getItem('ip')
+
+const isAutoLogin = ref('false')
+const changeisAutoLogin = () =>{
+   if(isAutoLogin.value==='false') isAutoLogin.value='true'
+   else isAutoLogin.value='false'
+}
 const userAgent = navigator.userAgent;
 const validatePhone = () => {
   if(!reg.test(formModel.value.phone)) 
@@ -23,20 +39,29 @@ const validatePhone = () => {
      }
      return true;
 }
-const validateyzm= async () => {
+const validateCode = () => {
+   if(!codeReg.test(formModel.value.code)){
+      message.value='验证码格式错误'
+      return false;
+   }
+   return true;
+}
+const sendCode= () => {
    // form.value.validateField('Phone',(valid) => {
    if(validatePhone()) 
      {
-      message.value=''
+        message.value=''
        //向后端请求发送验证码
-         const res = await userSendcodeService(formModel.value.phone).then(res=>{
+         const res = userSendcodeService(formModel.value.phone).then(res=>{
             console.log(res.data);
             //接口的成功事件处理逻辑
+            if(res.data.code!==200){
+               message.value=res.data.info
+            }
          }).catch(err=>{
-            console.log(err);
+             console.log(err);
          })
-         console.log(res.data)
-         
+
        //倒计时
        sending.value=false;
        const countId = setInterval(() => {
@@ -45,22 +70,37 @@ const validateyzm= async () => {
             clearInterval(countId);
             sending.value=true;
             second.value=5
-            yzmwz.value='重新发送'
+            codewz.value='重新发送'
          }
        },1000)
      }
    }
 const userStore=useUserStore()
 //点击登录
-const login = async () => {
+const login = () => {
    //登录预校验
     if(validatePhone()){
+      if(validateCode()){
+         message.value=''
+         console.log(formModel.value.phone);
+         const res =  userLoginService(formModel.value.phone,formModel.value.code,ip,fingerPrinting.value,isAutoLogin.value).then(res=>{
+         console.log(res.data);
+         if(res.data.code===2500 || res.data.code===2007) message.value=res.data.info
+         else if(res.data.code===200){
+            userStore.setToken(res.data.data.accessToken)
+            userStore.setRefreshToken(res.data.data.refreshToken)
+            userStore.setData(res.data.data.userId,res.data.data.positionList)
 
+         }
+         else  ElMessage.error('服务异常')
+      }).catch(err=>{
+         console.log(err);
+      })
     }
    //获取token判断
-   // const res = await userLoginService(formModel.value)
+  }
 }
-console.log(sessionStorage.getItem('ip'))
+console.log(ip)
 console.log(userAgent)
 </script>
 
@@ -81,15 +121,15 @@ console.log(userAgent)
      </el-form-item>
      <el-form-item label="验证码"  label-position = "left" label-width="80px">
       <div class="flex">
-         <el-input v-model="formModel.yzm"></el-input>
-        <el-button v-if="sending" type="text" @click="validateyzm">{{yzmwz}}</el-button>
+         <el-input v-model="formModel.code"></el-input>
+        <el-button v-if="sending" type="text" @click="sendCode">{{codewz}}</el-button>
         <el-button v-else type="text" disabled="true">{{ second }}s</el-button>
       </div>
      </el-form-item>
      <el-form-item class="flex">
       <div class="flex">
        <span class="eromes">{{ message }}</span>
-       <el-checkbox class="cbox" size="small">三十天内自动登录</el-checkbox>
+       <el-checkbox class="cbox" size="small" @click="changeisAutoLogin()">三十天内自动登录</el-checkbox>
       </div>
      </el-form-item>
      <el-form-item>

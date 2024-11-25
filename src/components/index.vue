@@ -4,7 +4,8 @@
   const router = useRouter()
   const goPersonalCenter = () => {
     router.push('/personalCenter')
-  } 
+  }
+   
 </script>
 
 <template>
