@@ -57,12 +57,14 @@ let getRecord = async () => {
             automatic_fields:false
         })
     }); 
-    console.log(tenantAccessToken);
-    const data = await response.json();
-    console.log(data);
+    // console.log(tenantAccessToken);
+    // const data = await response.json();
+    // console.log(data);
     
-    return data.data.items.map(item => item.record_id);
-    // return data.data.items[0].record_id;
+    // return data.data.items.map(item => item.record_id);
+    // // return data.data.items[0].record_id;
+    const data = await response.json();
+    return data; 
 }
 
 //批量获取记录
@@ -97,20 +99,42 @@ let getRecord = async () => {
 
 
 let updateProjectProgress = async () => {
-    // const GetRecords = await getRecords();
-    // const records = GetRecords.items;
-    let records = await getRecord();
-    
-    if(records.data.items.fields.负责人 === "姚焕增"){
-        // 姓名匹配负责人，然后更新项目进度中的数据,距离结束时间3天内的为即将逾期，已逾期为距离结束时间超过当前时间
-        let totalTasks = records.length;
-        let unfinishedTasks = records.filter(record => record.fields['当前状态'] !== 'Completed').length;
-        let soonOverdue = records.filter(record => new Date(record.fields['预计结束时间']) < new Date(new Date().getTime() + (3*24*60*60*1000)) && new Date(record.fields['预计结束时间']) >= new Date()).length;
-        let overdue = records.filter(record => new Date(record.fields['预计结束时间']) < new Date()).length;
-    }
-    
+    try {
+        const response = await getRecord();
+        console.log(response);
+        if (response.code === 0 && response.data?.items) {
+            const responsibleRecords = response.data.items.filter(record => 
+                Array.isArray(record.fields.负责人) && 
+                record.fields.负责人.some(person => person.name === "姚焕增")
+            );
+            
+            if (responsibleRecords.length > 0) {
+                const totalTasks = responsibleRecords.length;
+                const unfinishedTasks = responsibleRecords.filter(record => 
+                    record.fields['当前状态'] !== '已完成'
+                ).length;
+                const soonOverdue = responsibleRecords.filter(record => {
+                    const endDate = new Date(record.fields['预计结束时间']);
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    return endDate < tomorrow && endDate >= new Date();
+                }).length;
+                const overdue = responsibleRecords.filter(record => 
+                    new Date(record.fields['预计结束时间']) < new Date() && record.fields['当前状态'] !== '已完成'
+                ).length;
 
-    console.log(`Total Tasks: ${totalTasks}, Unfinished Tasks: ${unfinishedTasks}, Soon Overdue: ${soonOverdue}, Overdue: ${overdue}`);
+                // 更新DOM元素
+                document.getElementById('totalTasks').textContent = totalTasks;
+                document.getElementById('unfinishedTasks').textContent = unfinishedTasks;
+                document.getElementById('soonOverdue').textContent = soonOverdue;
+                document.getElementById('overdue').textContent = overdue;
+            }
+        } else {
+            console.error('获取记录失败:', response);
+        }
+    } catch (error) {
+        console.error('更新项目进度时发生错误:', error);
+    }
 }
 
 updateProjectProgress();
@@ -147,134 +171,66 @@ const userToken = localStorage.getItem('userToken') ||  '';//用户token
 
 
 //获取当前消息列表
-const fetchInfList = async (page = 1) => {
-    try {
-        const data = await getInfList(userToken, page, timestamp.value);
-        if (data?.code === 200) {// 添加空值检查，如果 inf_s 未定义则使用空数组            
-            const messages = data.data?.inf_s || [];
-            if (messages.length > 0) {
-                inf_s.value = messages.filter((msg) => msg?.content);
-                totalPage.value = data.data?.total_page || 1;
-                totalInf.value = data.data?.total || 0; // 假设后端返回 total 表示总记录数
-            } else {
-                // 如果没有消息，设置默认值
-                inf_s.value = [];
-                totalPage.value = 1;
-                totalInf.value = 0;
-            }
-        } else {
-            console.error('获取消息列表失败', data?.text);
-            inf_s.value = []; // 错误情况下设置为空数组
-            totalInf.value = 0;
-        }
-    } catch (error) {
-        console.error('获取消息列表失败', error);
-        inf_s.value = []; // 错误情况下设置为空数组
-        totalInf.value = 0;
-    }
-}
+// const fetchInfList = async (page = 1) => {
+//     try {
+//         const data = await getInfList(userToken, page, timestamp.value);
+//         if (data?.code === 200) {// 添加空值检查，如果 inf_s 未定义则使用空数组            
+//             const messages = data.data?.inf_s || [];
+//             if (messages.length > 0) {
+//                 inf_s.value = messages.filter((msg) => msg?.content);
+//                 totalPage.value = data.data?.total_page || 1;
+//                 totalInf.value = data.data?.total || 0; // 假设后端返回 total 表示总记录数
+//             } else {
+//                 // 如果没有消息，设置默认值
+//                 inf_s.value = [];
+//                 totalPage.value = 1;
+//                 totalInf.value = 0;
+//             }
+//         } else {
+//             console.error('获取消息列表失败', data?.text);
+//             inf_s.value = []; // 错误情况下设置为空数组
+//             totalInf.value = 0;
+//         }
+//     } catch (error) {
+//         console.error('获取消息列表失败', error);
+//         inf_s.value = []; // 错误情况下设置为空数组
+//         totalInf.value = 0;
+//     }
+// }
 
 //翻页重新获取数据
-const handleCurrentChange = async (page) => {
-    currentPage.value = page;
-    await fetchInfList(page);
+// const handleCurrentChange = async (page) => {
+//     currentPage.value = page;
+//     await fetchInfList(page);
+// };
+
+// 全部已读
+// 标记所有消息为已读
+const markAllAsRead = () => {
+    inf_s.value = inf_s.value.map(inf => ({ ...inf, isRead: true }));
+    ElMessage.success('所有消息已标为已读');
 };
 
-//全部已读
-const readAll = async () => {
-    if (!inf_s.value.length) return; // 如果没有消息，直接返回
-    
-    const unreadInf = inf_s.value.filter((msg) => !msg.isRead);
-    if (!unreadInf.length) return; // 如果没有未读消息，直接返回
-    
-    const userIds = unreadInf.map((msg) => msg.userId);
-
-    try {
-        const data = await readInf(userIds);
-        if (data?.code === 200) {
-            unreadInf.forEach((msg) => (msg.isRead = true));
-        } else {
-            throw new Error(data?.message || '后端返回错误');
-        }
-    } catch (error) {
-        console.error('全部已读失败', error);
-        ElMessage.error('标记全部已读失败，请稍后重试');
-    }
-}
-
-//消息已读
-const handleInfClick = async (inf) => {
-    if (!inf) return;
-    
-    infContent.value = inf.content;
+// 处理消息点击事件
+const handleInfClick = (inf) => {
+    // 显示消息详情
     showInfDetail.value = true;
-
-    if (!inf.isRead) {
-        try {
-            const data = await readInf([inf.userId]);
-            if (data?.code === 200) {
-                inf.isRead = true;
-            } else {
-                throw new Error(data?.message || '标记已读失败');
-            }
-        } catch (error) {
-            console.error('消息已读失败', error);
-            ElMessage.error('标记已读失败，请稍后重试');
-        }
-    }
+    infContent.value = inf.content;
+    // 标记为已读并更新样式
+    updateInfReadStatus(inf.id);
 };
 
-//关闭消息详情
+// 更新单条消息的已读状态
+const updateInfReadStatus = (infId) => {
+    inf_s.value = inf_s.value.map(inf => 
+        inf.id === infId ? { ...inf, isRead: true } : inf
+    );
+};
+
+// 关闭消息详情视图
 const closeInf = () => {
     showInfDetail.value = false;
 };  
-
-//定时检查更新
-const checkUpdate = async () => {
-    if (!userToken) return; // 如果没有token，不执行检查
-    
-    try {
-        const data = await getInfList(userToken, 1, timestamp.value);
-        if (data?.code === 200 && data.data?.isUpdate) {
-            await fetchInfList(currentPage.value);
-            // 可选：有新消息时提醒用户
-            ElMessage.info('收到新消息');
-        }
-    } catch (error) {
-        console.error('定时检查更新失败', error);
-    }
-};
-
-//启动定时检查
-const startCheckForUpdate = () => {
-    // 清除可能存在的旧定时器
-    if (intervalId) {
-        clearInterval(intervalId);
-    }
-
-    // 页面可见性变化监听
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            clearInterval(intervalId);
-        } else {
-            intervalId = setInterval(checkUpdate, 60000); // 每分钟检查一次
-            checkUpdate(); // 立即检查一次
-        }
-    });
-
-    // 初始启动定时器
-    if (!document.hidden) {
-        intervalId = setInterval(checkUpdate, 60000);
-        checkUpdate(); // 立即检查一次
-    }
-};
-
-// 组件卸载时清理定时器
-onUnmounted(() => {
-    if (intervalId) {
-        clearInterval(intervalId);
-    }
-});
 
 /* 消息 -- end */
 
