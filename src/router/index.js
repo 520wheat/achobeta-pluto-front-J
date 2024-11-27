@@ -26,10 +26,6 @@ const router = createRouter({
                     component: () => import('@/components/menuView/PersonalCenter.vue')
                 },
                 {
-                    path: '/GoCommonDevice',
-                    component: () => import('@/components/menuView/GoCommonDevice.vue')
-                },
-                {
                     path: '/LoginPage',
                     component: () => import('@/components/LoginPage.vue')
                 }   

@@ -1,7 +1,7 @@
 <script setup>
 import axios from 'axios';
 import { stringify } from 'postcss';
-import { ref, onUnmounted } from 'vue';
+import { ref, onUnmounted, computed } from 'vue';
 import ElementPlus from 'element-plus'
 import { ElButton, ElTable, ElTableColumn, ElMessage } from 'element-plus'
 import 'element-plus/dist/index.css'
@@ -144,16 +144,16 @@ updateProjectProgress();
 
 /* 消息 -- begin */
 const inf_s = ref([
-  { userId: '1', content: 'Welcome to the system!', isRead: false, type: 0 },
-  { userId: '2', content: 'Your report has been approved.', isRead: true, type: 1 },
-  { userId: '3', content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 1 },
-  { userId: '4', content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 0 },
-  { userId: '5', content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 1 },
-  { userId: '6', content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 0 },
-  { userId: '7', content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 1 },
-  { userId: '8', content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 1 },
-  { userId: '9', content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 1 },
-  { userId: '10', content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 0 },   
+  { userId: 1, content: 'Welcome to the system!', isRead: false, type: 0 },
+  { userId: 2, content: 'Your report has been approved.', isRead: true, type: 1 },
+  { userId: 3, content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 1 },
+  { userId: 4, content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 0 },
+  { userId: 5, content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 1 },
+  { userId: 6, content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 0 },
+  { userId: 7, content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 1 },
+  { userId: 8, content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 1 },
+  { userId: 9, content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 1 },
+  { userId: 10, content: 'Reminder: Team meeting tomorrow at 10 AM.', isRead: false, type: 0 },   
 ]);
 const totalInf = ref(0);//总消息数
 const currentPage = ref(1);//当前页码
@@ -165,72 +165,62 @@ const timestamp = ref(0);//时间戳
 let intervalId = null;//定时器ID
 const userToken = localStorage.getItem('userToken') ||  '';//用户token
 
-//后端接口，记得定义
+//获取所有消息
+const getAllInf = async () => {
+    const response = await axios.get('/main/getAnnounces');
+    console.log(response);
+} 
+getAllInf();
 
+//计算更新总消息数
+const updateTotalInf = () => {
+    totalInf.value = inf_s.value.filter(inf =>!inf.isRead).length;
+};
+// 计算总页数
+const updateTotalPage = () => { 
+    totalPage.value = Math.ceil(totalInf.value / 5);
+};
+updateTotalInf();
+updateTotalPage();
 
-
-
-//获取当前消息列表
-// const fetchInfList = async (page = 1) => {
-//     try {
-//         const data = await getInfList(userToken, page, timestamp.value);
-//         if (data?.code === 200) {// 添加空值检查，如果 inf_s 未定义则使用空数组            
-//             const messages = data.data?.inf_s || [];
-//             if (messages.length > 0) {
-//                 inf_s.value = messages.filter((msg) => msg?.content);
-//                 totalPage.value = data.data?.total_page || 1;
-//                 totalInf.value = data.data?.total || 0; // 假设后端返回 total 表示总记录数
-//             } else {
-//                 // 如果没有消息，设置默认值
-//                 inf_s.value = [];
-//                 totalPage.value = 1;
-//                 totalInf.value = 0;
-//             }
-//         } else {
-//             console.error('获取消息列表失败', data?.text);
-//             inf_s.value = []; // 错误情况下设置为空数组
-//             totalInf.value = 0;
-//         }
-//     } catch (error) {
-//         console.error('获取消息列表失败', error);
-//         inf_s.value = []; // 错误情况下设置为空数组
-//         totalInf.value = 0;
-//     }
-// }
-
-//翻页重新获取数据
-// const handleCurrentChange = async (page) => {
-//     currentPage.value = page;
-//     await fetchInfList(page);
-// };
 
 // 全部已读
-// 标记所有消息为已读
-const markAllAsRead = () => {
+const readAll = () => {
     inf_s.value = inf_s.value.map(inf => ({ ...inf, isRead: true }));
     ElMessage.success('所有消息已标为已读');
 };
 
-// 处理消息点击事件
-const handleInfClick = (inf) => {
-    // 显示消息详情
-    showInfDetail.value = true;
-    infContent.value = inf.content;
-    // 标记为已读并更新样式
-    updateInfReadStatus(inf.id);
+// 消息点击事件
+const handleInfClick = (inf) => {  
+    showInfDetail.value = true;// 显示消息详情
+    infContent.value = inf.content;   
+    updateInfReadStatus(inf.userId);// 标记为已读并更新样式
 };
 
 // 更新单条消息的已读状态
 const updateInfReadStatus = (infId) => {
-    inf_s.value = inf_s.value.map(inf => 
-        inf.id === infId ? { ...inf, isRead: true } : inf
-    );
+    const index = inf_s.value.findIndex(inf => inf.userId === infId);
+    if (index !== -1) {
+        inf_s.value[index] = { ...inf_s.value[index], isRead: true };
+    }
 };
 
 // 关闭消息详情视图
 const closeInf = () => {
     showInfDetail.value = false;
 };  
+
+// 翻页
+const paginatedMessages = computed(() => {
+    const startIndex = (currentPage.value - 1) * 5;
+    const endIndex = startIndex + 5;
+    return inf_s.value.slice(startIndex, endIndex);
+}); 
+
+const handleCurrentChange = (page) => {
+    currentPage.value = page;
+};
+
 
 /* 消息 -- end */
 
@@ -273,16 +263,16 @@ const closeInf = () => {
         <!-- 消息列表 -->
          <ul class="inf-list">
             <li
-              v-for="inf in inf_s"
+              v-for="inf in paginatedMessages"
               :key="inf.userId"
               class="inf-item"
             >
                 <div class="dot-content" @click="handleInfClick(inf)">
                     <span v-if="!inf.isRead" class="unread-dot"></span>
                     <span :class="['inf-content',{read:inf.isRead}]">
-                        {{inf.length > 25
-                            ? inf.content.sliderContextKey(0,25) + '...'
-                            :inf.content
+                        {{inf.content.length > 25
+                            ? inf.content.substring(0,25) + '...'
+                            : inf.content
                         }}
                     </span>
                 </div>
@@ -294,22 +284,17 @@ const closeInf = () => {
                     </span>
                 </div>
             </li>
-            <p v-if="inf_s?.value?.length" class="no-data">暂无消息</p>
+            <p v-if="inf_s.length === 0" class="no-data">暂无消息</p>
          </ul>
 
         <!-- 分页 -->
          <div class="inf-pagination">
-            <!-- <el-pagination
-                layout="prev, pager, next"
-                :total="totalInf"
-                :page-size="5"
-                :current-page="currentPage"
-                @current-change="handleCurrentChange"
-            /> -->
             <el-pagination
-                :page-size="5"
-                layout="prev, pager, next"
+                :page-size="5"              
                 :total="totalInf"
+                :current-page="currentPage"
+                layout="prev, pager, next"
+                @current-change="handleCurrentChange"
             />  
          </div>
 
@@ -488,8 +473,9 @@ const closeInf = () => {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 10px;
-        padding: 1px 20px;
+        margin-top: 0px;
+        margin-bottom: 5px;
+        padding: 1px 30px;
     }
 
     .dot-content {
@@ -527,12 +513,14 @@ const closeInf = () => {
         padding: 5px 10px;
         font-size: 12px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        transition: all 0.3s ease;
     }
 
-    .inf-type.system:hover {
-        background-color: #85ce61;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    /* 已读系统通知的样式 */
+    .inf-item:has(.inf-content.read) .inf-type.system {
+        background-color: #e4e7ed;
+        color: #909399;
+        box-shadow: none;
     }
 
     .inf-type.type {
@@ -542,12 +530,14 @@ const closeInf = () => {
         padding: 5px 10px;
         font-size: 12px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);   
-        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        transition: all 0.3s ease;
     }   
 
-    .inf-type.type:hover {
-        background-color: #66b1ff;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    /* 已读团队通知的样式 */
+    .inf-item:has(.inf-content.read) .inf-type.type {
+        background-color: #e4e7ed;
+        color: #909399;
+        box-shadow: none;
     }
 
     /* 分页容器 */
