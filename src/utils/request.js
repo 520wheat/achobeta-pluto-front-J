@@ -3,7 +3,7 @@ import { useUserStore } from '@/stores'
 import { getRefresh } from '@/api/user.js'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
-const baseURL = 'http://localhost8091'
+const baseURL = 'http://3jqpu6.natappfree.cc'
 const userStore = useUserStore()
 const instance = axios.create({
     //基础地址，超时时间
@@ -16,21 +16,24 @@ instance.interceptors.request.use(
     (config) => {
         //在发送请求前做些什么
         //携带token
-        // const userStore = useUserStore()
-        // if (config.url !== '/LoginPage') {
-        //     config.headers.Authorization = userStore.token
-        // }
-        // if (config.url === '/refresh_token') {
-        //     config.headers.Authorization = userStore.refreshToken
-        // }
+        const userStore = useUserStore()
+        if (config.url === '/api/v1/auth/refresh') {
+            config.headers.refresh_token = userStore.refreshToken
+        }
+        else if (userStore.accessToken) {
+            config.headers.access_token = userStore.accessToken
+        }
         return config
     },
-    (err) => Promise.reject(err)
+    (err) => {
+        return Promise.reject(err)
+    }
 )
 let isRefreshing = false;//标记是否正在刷新token
 //响应拦截器
 instance.interceptors.response.use(
-    async (res) => {
+    (res) => {
+
         // if (res.data.code === '0000') {
         //     if (res.data.data.token) {
         //         userStore.setToken(res.data.data.token)
@@ -63,9 +66,43 @@ instance.interceptors.response.use(
         //         }
         //     }
         // }
-        // return res;
+        return res
     },
     (err) => {
+        if (err.response.data.code === 6008) {
+            if (!isRefreshing) {
+                console.log('accesstoken过期');
+                isRefreshing = true;
+                //请求刷新token
+                const res = getRefresh().then(res => {
+                    console.log(res.data);
+                    if (res.data.code === 200) {
+                        userStore.setToken(res.data.data.accessToken)
+                        userStore.setRefreshToken(res.data.data.refreshToken)
+                        console.log('刷新成功');
+                    }
+                    else if (res.data.code === 6004) {
+                        console.log('长token过期');
+                        userStore.removeToken()
+                        ElMessage.error('请重新登录')
+                        router.push('/LoginPage')
+                    }
+                    // else if(res.data.code===6003){
+                    //     console.log('长token缺失');
+                    //     userStore.removeToken()
+                    //     ElMessage.error('请重新登录')
+                    //     router.push('/LoginPage')
+                    // }
+                }).catch(err => {
+                    console.log(err);
+                })
+                isRefreshing = false
+            }
+        }
+        else if (err.response.data.code === 6013) {
+            err.config.headers.access_token = userStore.accessToken
+            return instance.request(err.config)
+        }
         return Promise.reject(err)
     }
 )

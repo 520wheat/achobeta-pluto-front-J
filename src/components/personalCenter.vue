@@ -71,8 +71,9 @@
   </template>
   
   <script lang="ts" setup>
-  import { reactive, ref } from 'vue' 
-  import { useRouter } from 'vue-router'
+  import {ref,reactive} from 'vue'
+  import router from '@/router/index.js'
+  // import { useRouter } from 'vue-router'
   import type { ComponentSize, FormInstance, FormRules } from 'element-plus'
   
   interface RuleForm {
