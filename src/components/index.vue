@@ -5,14 +5,14 @@
   import axios from 'axios'
   import {useUserStore} from '@/stores'
   import {logout} from '@/api/user.js'
-import { ElMessage } from 'element-plus';
+  import { ElMessage } from 'element-plus';
   const router = useRouter()
   const dialogVisible = ref(false)
-
-  const userId = localStorage.getItem('userId') || '1005';//用户ID
-  const deviceId = localStorage.getItem('deviceId') || '1005';//设备ID
-
   const userStore = useUserStore()
+  const userId = userStore.userId;//用户ID
+  const deviceId = userStore.deviceId;//设备ID
+  const ip = sessionStorage.getItem('ip');//IP
+
   const goPersonalCenter = () => {
     router.push('/personalCenter')
   }
@@ -52,14 +52,10 @@ const getCommonDevice = async () => {
         },
         headers:{}
     })
-    console.log(response);
+    console.log(11111,response);
 } 
 getCommonDevice();
 
-  import {useUserStore} from '@/stores'
-  import {logout} from '@/api/user.js'
-  import { ElMessage } from 'element-plus';
-  const userStore = useUserStore()
   const loginOut = () =>{
      const res = logout(userStore.deviceId).then(res=>{
       console.log(res.data);
@@ -93,9 +89,7 @@ getCommonDevice();
             <el-dropdown-menu>
               <el-dropdown-item @click="goPersonalCenter">个人中心</el-dropdown-item>
               <el-dropdown-item @click="goCommonDevice">常用设备</el-dropdown-item>
-              <el-dropdown-item @click="loginOut()"><span style="text-align: center;" >登出</span></el-dropdown-item>
-              <el-dropdown-item>常用设备</el-dropdown-item>
-              
+              <el-dropdown-item @click="loginOut()"><span style="text-align: center;" >登出</span></el-dropdown-item>          
             </el-dropdown-menu>
           </template>
         </el-dropdown>
