@@ -30,6 +30,8 @@ let second = ref(5);
 let codewz = ref('获取验证码')
 let message = ref('')
 const ip= sessionStorage.getItem('ip')
+console.log(ip);
+
 
 const isAutoLogin = ref('false')
 const changeisAutoLogin = () =>{
@@ -93,6 +95,8 @@ const login = () => {
          console.log(res.data);
          if(res.data.code===2500 || res.data.code===2007) message.value=res.data.info
          else if(res.data.code===200){
+            console.log(1);
+            
             userStore.setToken(res.data.data.accessToken)
             userStore.setRefreshToken(res.data.data.refreshToken)
             userStore.setData(res.data.data.userId,res.data.data.teams,res.data.data.deviceId)
