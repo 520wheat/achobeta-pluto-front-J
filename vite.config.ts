@@ -36,16 +36,16 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/open-apis\/authen\/v1\/authorize/, '')
       },
-      '/api': {
-        target: 'http://enuhwq.natappfree.cc',
+      '/api/v1': {
+        target: 'http://3jqpu6.natappfree.cc',//个人信息
         changeOrigin: true,
       },
-      '/main/getAnnounces':{
-        target: 'http://5adhjg.natappfree.cc',//消息
+      '/api/v1/announce':{
+        target: 'http://3jqpu6.natappfree.cc',//消息
         changeOrigin: true,
       },
-      '/api/v1/user/like':{
-        target: 'http://5adhjg.natappfree.cc/api/v1',//点赞
+      '/api/v1/user':{
+        target: 'http://3jqpu6.natappfree.cc',//点赞
         changeOrigin: true,
       } 
     }

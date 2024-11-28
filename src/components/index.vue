@@ -2,8 +2,13 @@
   import { ArrowDown, Timer } from '@element-plus/icons-vue'
   import { useRouter } from 'vue-router'
   import { ref } from 'vue'
+  import axios from 'axios'
   const router = useRouter()
   const dialogVisible = ref(false)
+
+  const userId = localStorage.getItem('userId') || '1005';//用户ID
+  const deviceId = localStorage.getItem('deviceId') || '1005';//设备ID
+
   const goPersonalCenter = () => {
     router.push('/personalCenter')
   }
@@ -34,6 +39,22 @@
     console.log('Logging out device:', deviceId)
     logoutStatus.value.set(deviceId, true)
   }
+
+  // 获取常用设备
+const getCommonDevice = async () => {
+    const response = await axios.get('/api/v1/device/getDevices',{
+        params:{
+            userId: userId,
+            deviceId: deviceId,
+            limit: 10,
+            lastDeviceId: ''
+        },
+        headers:{}
+    })
+    console.log(response);
+} 
+getCommonDevice();
+
 </script>
 
 <template>

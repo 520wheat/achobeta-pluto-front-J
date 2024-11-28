@@ -90,18 +90,21 @@
 
 // 点赞
   const toggleLike = async () => {
+    const userId = localStorage.getItem('userId') || '1001'
+    console.log(userId);
     try {
-      const response = await axios.post('/api/v1/user/like', {
-        headers:{
+      const response = await axios.post('/api/v1/user/like/', {
+        fromId: userId,
+        toId: userId,
+        liked: true
+      }, {
+        headers: {
           'Content-Type': 'application/json',
-        },
-        query:{
-          froml:1,
-          told:1,
-          liked:true
+          'Authorization': `Bearer ${userId}`
         }
       })
-      isLiked.value = response.data.isLiked
+      console.log(response.data.data);
+      isLiked.value = !isLiked.value
       likeCount.value = response.data.likeCount
     } catch (error) {
       console.error('更新点赞状态失败:', error)
@@ -251,8 +254,10 @@
         </el-form-item>
         <!-- 所属团队/职位 -->
         <el-form-item label="所属团队/职位：" class="form-team">
-          <ul style="padding: 0;margin: 0;">
-            <li v-for="(position, index) in ruleForm.positions" :key="index" style="list-style-type: none; font-size: 16px; font-weight: 500; color: #000000;">
+          <ul style="padding: 0; margin: 0;">
+            <li v-for="(position, index) in ruleForm.positions" 
+                :key="index" 
+                style="list-style-type: none; font-size: 16px; font-weight: 500; color: #000000; white-space: nowrap;">
               {{ position[1] }} - {{ position[2] }}<template v-if="position[3] && position[4]"> / {{ position[3] }} / {{ position[4] }}</template>
             </li>
           </ul>
