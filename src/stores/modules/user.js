@@ -2,24 +2,42 @@ import { defineStore } from "pinia";
 import { ref } from 'vue'
 
 export const useUserStore = defineStore('big-user', () => {
-    const token = ref('')
+    const accessToken = ref('')
     const refreshToken = ref('')
+    const userId = ref('')
+    const deviceId = ref('')
+    const teams = ref([])
     const setToken = (newToken) => {
-        token.value = newToken
+        accessToken.value = newToken
     }
     const setRefreshToken = (newToken) => {
         refreshToken.value = newToken
     }
     const removeToken = () => {
-        token.value = ''
+        accessToken.value = ''
+        refreshToken.value = ''
     }
-
+    const setData = (uId, pList, devId) => {
+        userId.value = uId,
+        teams.value = pList
+        deviceId.value = devId
+    }
+    const removeData = () => {
+        userId.value = ''
+        teams.value = []
+        deviceId.value = ''
+    }
     return {
-        token,
+        accessToken,
         refreshToken,
+        userId,
+        deviceId,
+        teams,
         setToken,
         setRefreshToken,
-        removeToken
+        setData,
+        removeToken,
+        removeData
     }
 }, {
     persist: true

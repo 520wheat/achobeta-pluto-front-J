@@ -11,6 +11,7 @@ declare module 'vue' {
     ElAside: typeof import('element-plus/es')['ElAside']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCard: typeof import('element-plus/es')['ElCard']
+    ElCascader: typeof import('element-plus/es')['ElCascader']
     ElCheckbox: typeof import('element-plus/es')['ElCheckbox']
     ElCol: typeof import('element-plus/es')['ElCol']
     ElContainer: typeof import('element-plus/es')['ElContainer']
@@ -36,13 +37,13 @@ declare module 'vue' {
     ElTable: typeof import('element-plus/es')['ElTable']
     ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
     ElTag: typeof import('element-plus/es')['ElTag']
-    GoCommonDevice: typeof import('./src/components/menuView/goCommonDevice.vue')['default']
     LoginPage: typeof import('./src/components/LoginPage.vue')['default']
     Main: typeof import('./src/components/main.vue')['default']
     ManageTeamPage: typeof import('./src/components/ManageTeamPage.vue')['default']
     PersonalCenter: typeof import('./src/components/menuView/personalCenter.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    UserAdd: typeof import('./src/components/UserAdd.vue')['default']
     UserInfEdit: typeof import('./src/components/UserInfEdit.vue')['default']
   }
 }

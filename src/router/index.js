@@ -7,7 +7,7 @@ const router = createRouter({
         {
             path: '/',
             component: () => import('@/components/index.vue'),
-            redirect: '/main',
+            redirect: '/LoginPage',
             children: [
                 {
                     path: '/main',
@@ -22,16 +22,20 @@ const router = createRouter({
                     component: () => import('@/components/UserInfEdit.vue')
                 },
                 {
+                    path:'/UserAdd',
+                    component: () => import('@/components/UserAdd.vue')
+                },
+                {
                     path: '/PersonalCenter',
                     component: () => import('@/components/menuView/PersonalCenter.vue')
                 },
                 {
                     path: '/LoginPage',
                     component: () => import('@/components/LoginPage.vue')
-                }   
+                }
             ]
         }
-        
+
     ]
 })
 

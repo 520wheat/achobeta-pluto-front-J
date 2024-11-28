@@ -3,20 +3,21 @@
   import { useRouter } from 'vue-router'
   import { ref } from 'vue'
   import axios from 'axios'
+  import {useUserStore} from '@/stores'
+  import {logout} from '@/api/user.js'
+import { ElMessage } from 'element-plus';
   const router = useRouter()
   const dialogVisible = ref(false)
 
   const userId = localStorage.getItem('userId') || '1005';//用户ID
   const deviceId = localStorage.getItem('deviceId') || '1005';//设备ID
 
+  const userStore = useUserStore()
   const goPersonalCenter = () => {
     router.push('/personalCenter')
   }
   const goCommonDevice = () => {
     dialogVisible.value = true
-  }
-  const logout = () => {
-    router.push('/LoginPage')
   }
   const devices = ref([
     {
@@ -55,6 +56,23 @@ const getCommonDevice = async () => {
 } 
 getCommonDevice();
 
+  import {useUserStore} from '@/stores'
+  import {logout} from '@/api/user.js'
+  import { ElMessage } from 'element-plus';
+  const userStore = useUserStore()
+  const loginOut = () =>{
+     const res = logout(userStore.deviceId).then(res=>{
+      console.log(res.data);
+        if(res.data.code===200){
+            userStore.removeToken();
+            userStore.removeData();
+            router.push('/LoginPage')
+            ElMessage.success('登出成功')
+        }
+     }).catch(err=>{
+      console.log(err);
+     })
+  }
 </script>
 
 <template>
@@ -75,7 +93,9 @@ getCommonDevice();
             <el-dropdown-menu>
               <el-dropdown-item @click="goPersonalCenter">个人中心</el-dropdown-item>
               <el-dropdown-item @click="goCommonDevice">常用设备</el-dropdown-item>
-              <el-dropdown-item @click="logout"><span style="text-align: center;">登出</span></el-dropdown-item>
+              <el-dropdown-item @click="loginOut()"><span style="text-align: center;" >登出</span></el-dropdown-item>
+              <el-dropdown-item>常用设备</el-dropdown-item>
+              
             </el-dropdown-menu>
           </template>
         </el-dropdown>
