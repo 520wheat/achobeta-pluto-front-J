@@ -2,9 +2,10 @@ import request from '@/utils/request'
 import { Phone } from '@element-plus/icons-vue'
 
 //团队成员信息渲染
+
 export const teamShowMessage = (userId, teamId, lastId, limit) => {
     return request({
-        url: 'http://j5g9vg.natappfree.cc/api/v1/team/member/list',
+        url: '/api/v1/team/member/list',
         method: 'get',
         params: {
             userId,
@@ -14,11 +15,24 @@ export const teamShowMessage = (userId, teamId, lastId, limit) => {
         }
     })
 }
+// export const teamShowMessage = (requestMemberListDTO) => {
+//     return request({
+//         url: '/api/v1/team/member/list',
+//         method: 'get',
+//         params: {
+//             userId: requestMemberListDTO.userId,
+//             teamId: requestMemberListDTO.teamId,
+//             lastId: requestMemberListDTO.lastId,
+//             limit: requestMemberListDTO.limit
+//         }
+
+//     })
+// }
 
 //团队架构管理信息渲染
 export const teamQueryOrganization = (userId, teamId) => {
     return request({
-        url: 'http://j5g9vg.natappfree.cc/api/v1/team/structure',
+        url: '/api/v1/team/structure',
         method: 'get',
         params: {
             userId,
@@ -29,7 +43,7 @@ export const teamQueryOrganization = (userId, teamId) => {
 //修改团队组织架构
 export const teamModifyOranization = (userId, addPositions, deletePositions, teamId) => {
     return request({
-        url: 'http://j5g9vg.natappfree.cc/api/v1/team/structure',
+        url: '/api/v1/team/structure',
         method: 'put',
         data: {
             userId,
@@ -89,10 +103,10 @@ export const teamDeleteMember = (userId, memberId, teamId) => {
     })
 }
 //新增用户-添加团队成员
-export const teamAddMember = (teamId, userId, userName, phone, entryTime, gender, idCard, email, grade, major, studentId, experience, currentStatus, positions) =>{
+export const teamAddMember = (teamId, userId, userName, phone, entryTime, gender, idCard, email, grade, major, studentId, experience, currentStatus, positions) => {
     return request({
-        url:'/api/v1/team/member',
-        method:'post',
+        url: '/api/v1/team/member',
+        method: 'post',
         data: {
             teamId,
             userId,

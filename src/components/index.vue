@@ -1,11 +1,27 @@
 <script setup>
   import { ArrowDown } from '@element-plus/icons-vue'
   import { useRouter } from 'vue-router'
+  import {useUserStore} from '@/stores'
+  import {logout} from '@/api/user.js'
+import { ElMessage } from 'element-plus';
   const router = useRouter()
+  const userStore = useUserStore()
   const goPersonalCenter = () => {
     router.push('/personalCenter')
   }
-   
+  const loginOut = () =>{
+     const res = logout(userStore.deviceId).then(res=>{
+      console.log(res.data);
+        if(res.data.code===200){
+            userStore.removeToken();
+            userStore.removeData();
+            router.push('/LoginPage')
+            ElMessage.success('登出成功')
+        }
+     }).catch(err=>{
+      console.log(err);
+     })
+  }
 </script>
 
 <template>
@@ -26,7 +42,7 @@
             <el-dropdown-menu>
               <el-dropdown-item @click="goPersonalCenter">个人中心</el-dropdown-item>
               <el-dropdown-item>常用设备</el-dropdown-item>
-              <el-dropdown-item><span style="text-align: center;">登出</span></el-dropdown-item>
+              <el-dropdown-item @click="loginOut()"><span style="text-align: center;" >登出</span></el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>

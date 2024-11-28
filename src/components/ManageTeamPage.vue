@@ -2,20 +2,36 @@
    import router from '@/router/index.js'
    import {ref,onMounted,defineExpose} from 'vue'
    import {Loading,Delete,ArrowDown,Plus, MessageBox} from '@element-plus/icons-vue'
-   import {teamQueryOrganization,teamModifyOranization,teamShowMessage} from '@/api/team.js'
+   import {teamQueryOrganization,teamModifyOranization,teamShowMessage,teamDeleteMember} from '@/api/team.js'
    import {useUserStore} from '@/stores'
    const userStore = useUserStore()
-   console.log(userStore.positionList);
-   console.log(userStore.positionList[0].positionName);
+   //测试用
+  //  const teams = [
+  //   {
+  //     "positionId":"0001",
+  //     "positionName":"AchoBeta1.0"
+  //   },
+  //   {
+  //     "positionId":"0002",
+  //     "positionName":"AchoBeta2.0"
+  //   }
+  //  ]
+  //  console.log(teams);
+  //  userStore.setData("1001",teams,"520")
+  //  console.log(userStore.teams);
+   //测试用
+  //  console.log(userStore.teams[0].positionName);
    const dialogTeam = ref(false)
-   const lastId = ref()
-   const userId=ref('1001')
-   const teamId=ref('0001')
-   const currentTeam=ref('AchoBeta 1.0')
+   const lastId = ref('')
+   const userId=userStore.userId
+   const teamId=ref()
+   teamId.value=userStore.teams[0].teamId
+   const currentTeam=ref()//当前团队名称
+    currentTeam.value=userStore.teams[0].teamName
    const manage = ref([
     // {
     //     userName:'张三',
-    //     positionList:[
+    //     teams:[
     //       "设计者-设计负责人",
     //       "研发组-后端组-后端负责人",
     //       "财务组-财务负责人"
@@ -27,7 +43,7 @@
     // },
     // {
     //     userName:'张三',
-    //     positionList:[
+    //     teams:[
     //       "设计者-设计负责人",
     //       "研发组-后端组-后端负责人",
     //       "财务组-财务负责人"
@@ -39,10 +55,19 @@
     // },
    ])
     const tableData = ref()
+    // const requestMemberListDTO = {
+    //   userId:userId,
+    //   teamId:teamId.value,
+    //   lastId:lastId.value,
+    //   limit:'10'
+    // }
+    // console.log(requestMemberListDTO);
+    // userId,teamId.value,lastId.value,10
   //团队成员信息页面渲染
-   const ShowMessage = (lastId) =>{
-       const res = teamShowMessage('1001','0001',lastId,'10').then(res =>{
+   const ShowMessage = () =>{
+       const res = teamShowMessage(userId,teamId.value,lastId.value,10).then(res =>{
           console.log(res.data);
+          console.log(teamId.value);
           manage.value=res.data.data.members
           tableData.value = [...tableData.value, ...manage.value]
           console.log(manage.value);
@@ -51,7 +76,7 @@
          console.log(err);
        })
    }
-   ShowMessage(lastId.value);
+   ShowMessage();
    tableData.value=manage.value
    const container =ref()
    const scrollTopVal=ref(0)
@@ -65,10 +90,11 @@
         return
       }
       loading.value = true
+      console.log(tableData.value);
       //后续向后端请求数据
       setTimeout(function(){
       lastId.value=tableData.value[tableData.value.length-1].userId
-      ShowMessage(lastId.value)
+      ShowMessage()
       if(manage.value.length === 0){
         isEmpty.value=true;
         loading.value=false;
@@ -97,7 +123,8 @@
       router.push({
         path:'UserInfEdit',
         query:{
-          memberId:row.userId
+          memberId:row.userId,
+          teamId:teamId.value,
         }
       })
       
@@ -109,19 +136,36 @@
         confirmButtonText:'确认',
         cancelButtonText:'取消'
       })
-      console.log(1);
+      console.log(row.userId);
+      const res = teamDeleteMember(userId,row.userId,teamId.value).then(res=>{
+        console.log(res.data);
+        console.log('删除成功');
+        if(res.data.code===2403){
+          ElMessage.error(res.data.info)
+        }
+        else{
+         ElMessage.success('删除成功')
+         tableData.value=''
+         lastId.value=''
+         isEmpty.value=false
+        ShowMessage();
+        }
+      
+      }).catch(err=>{
+        console.log(err);
+      })
    }
   //新增用户
    const toUserInfEdit = () => {
      router.push({
-      path: 'UserInfEdit'
+      path: 'UserAdd'
      })
    }
  
   //获取团队架构管理树级信息
   const teamManage = () =>{
     dialogTeam.value = true;
-    const res = teamQueryOrganization('1001',teamId.value).then(res =>{
+    const res = teamQueryOrganization(userId,teamId.value).then(res =>{
        console.log(res.data);
        Tree1.value=res.data.data.subordinates
        console.log(Tree1.value);
@@ -136,10 +180,21 @@
         console.log(err);
     })
   }
-const changeTeam = (Id) =>{
+const manageChangeTeam = (Id,positionName) =>{
   teamId.value=Id
+  currentTeam.value=positionName
   console.log(teamId.value);
+  console.log(currentTeam.value);
   teamManage()
+}
+const messageChangeTeam = (Id,positionName) =>{
+   console.log(Id);
+   teamId.value=Id
+   currentTeam.value=positionName
+   tableData.value=''
+   lastId.value=''
+   isEmpty.value=false
+   ShowMessage();
 }
 const Tree1 = ref([
   //  {
@@ -305,9 +360,9 @@ const toggleEdit = (level) =>{
 }
 const creatItem1 = () =>{
   const newNode = {
-  parentPositionId:"0001",
+  parentPositionId:teamId.value,
   positionName:newPositionName.value,
-  parentPositionName:"AchoBeta1.0",
+  parentPositionName:currentTeam.value,
   level:1,
   subordinates:[]
   }
@@ -384,8 +439,8 @@ const preseve = () =>{
    addCompare(TreeCopy.value,Tree1.value)
    console.log(deletePositions.value);
    console.log(addPositions.value);
-   const res = teamModifyOranization('1001',addPositions.value,deletePositions.value,teamId.value).then(res =>{
-     console.log(res);
+   const res = teamModifyOranization(userId,addPositions.value,deletePositions.value,teamId.value).then(res =>{
+     console.log(res.data);
      deletePositions.value=[]
      addPositions.value=[]
      dialogTeam.value=false
@@ -417,15 +472,15 @@ const reset = () =>{
     <template #header>
     <div class="header">
         <div class="left">
-        <span style="font-size: 22px;padding: 0 15px;">团队信息</span>
+        <span style="font-size: 22px;padding: 0 15px;font-weight: 700;">团队信息</span>
          <el-dropdown trigger="click" style="line-height: 35px;">
           <span class="el-dropdown-link">
-            <span style="font-weight: bold;">当前团队: AchoBeta 1.0</span>
+            <span style="font-weight: bold;">当前团队: {{ currentTeam }}</span>
            <el-icon><ArrowDown /></el-icon>
           </span>
           <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item >个人中心</el-dropdown-item>
+            <el-dropdown-menu >
+              <el-dropdown-item v-for="(item,index) in userStore.teams" @click="messageChangeTeam(item.teamId,item.teamName)">{{ item.teamName }}</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -446,8 +501,7 @@ const reset = () =>{
           </span>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item @click="changeTeam('0001')">AchoBeta 1.0</el-dropdown-item>
-              <el-dropdown-item @click="changeTeam('0002')">AchoBeta 2.0</el-dropdown-item>
+              <el-dropdown-item v-for="(item,index) in userStore.teams" @click="manageChangeTeam(item.teamId,item.teamName)">{{ item.teamName }}</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>

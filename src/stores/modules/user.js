@@ -5,7 +5,8 @@ export const useUserStore = defineStore('big-user', () => {
     const accessToken = ref('')
     const refreshToken = ref('')
     const userId = ref('')
-    const positionList = ref([])
+    const deviceId = ref('')
+    const teams = ref([])
     const setToken = (newToken) => {
         accessToken.value = newToken
     }
@@ -16,19 +17,22 @@ export const useUserStore = defineStore('big-user', () => {
         accessToken.value = ''
         refreshToken.value = ''
     }
-    const setData = (uId, pList) => {
+    const setData = (uId, pList, devId) => {
         userId.value = uId,
-        positionList.value = pList
+        teams.value = pList
+        deviceId.value = devId
     }
     const removeData = () => {
         userId.value = ''
-        positionList.value = []
+        teams.value = []
+        deviceId.value = ''
     }
     return {
         accessToken,
         refreshToken,
         userId,
-        positionList,
+        deviceId,
+        teams,
         setToken,
         setRefreshToken,
         setData,

@@ -1,8 +1,14 @@
 <script setup>
 import {ref} from 'vue'
+import router from '@/router/index.js'
 import {useUserStore} from '@/stores'
 import {userSendcodeService,userLoginService} from '@/api/user.js'
 import FingerprintJS from '@fingerprintjs/fingerprintjs'
+const userStore=useUserStore()
+    if (userStore.accessToken) {
+        router.push('/main')
+      console.log(1);
+    }
 //浏览器指纹
 const fingerPrinting=ref('')
 FingerprintJS.load().then(fp => {
@@ -13,7 +19,7 @@ FingerprintJS.load().then(fp => {
 });
 //整个的用于提交的form数据对象,看接口文档
 const formModel=ref({
-   phone: '13025316516',
+   phone: '13708885777',
    code: ''
 })
 const form = ref()
@@ -75,7 +81,7 @@ const sendCode= () => {
        },1000)
      }
    }
-const userStore=useUserStore()
+
 //点击登录
 const login = () => {
    //登录预校验
@@ -89,8 +95,8 @@ const login = () => {
          else if(res.data.code===200){
             userStore.setToken(res.data.data.accessToken)
             userStore.setRefreshToken(res.data.data.refreshToken)
-            userStore.setData(res.data.data.userId,res.data.data.positionList)
-
+            userStore.setData(res.data.data.userId,res.data.data.teams,res.data.data.deviceId)
+            router.push('/main')
          }
          else  ElMessage.error('服务异常')
       }).catch(err=>{

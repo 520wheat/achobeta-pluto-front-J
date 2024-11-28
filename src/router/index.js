@@ -22,6 +22,10 @@ const router = createRouter({
                     component: () => import('@/components/UserInfEdit.vue')
                 },
                 {
+                    path:'/UserAdd',
+                    component: () => import('@/components/UserAdd.vue')
+                },
+                {
                     path: '/PersonalCenter',
                     component: () => import('@/components/PersonalCenter.vue')
                 }
