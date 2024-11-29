@@ -6,18 +6,18 @@
 import { ElMessage } from 'element-plus';
   const router = useRouter()
   const userStore = useUserStore()
+  
   const goPersonalCenter = () => {
     router.push('/personalCenter')
   }
   const loginOut = () =>{
      const res = logout(userStore.deviceId).then(res=>{
       console.log(res.data);
-        if(res.data.code===200){
-            userStore.removeToken();
-            userStore.removeData();
-            router.push('/LoginPage')
-            ElMessage.success('登出成功')
-        }
+       router.push('/LoginPage')
+        userStore.removeToken();
+        userStore.removeData();
+        ElMessage.success('登出成功')
+        console.log(userStore.accessToken); 
      }).catch(err=>{
       console.log(err);
      })

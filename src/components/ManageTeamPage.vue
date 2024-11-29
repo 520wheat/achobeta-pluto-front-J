@@ -4,16 +4,19 @@
    import {Loading,Delete,ArrowDown,Plus, MessageBox} from '@element-plus/icons-vue'
    import {teamQueryOrganization,teamModifyOranization,teamShowMessage,teamDeleteMember} from '@/api/team.js'
    import {useUserStore} from '@/stores'
+   import { useRoute } from 'vue-router';
    const userStore = useUserStore()
+   let route = useRoute()
+   console.log(route.query);
    //测试用
   //  const teams = [
   //   {
-  //     "positionId":"0001",
-  //     "positionName":"AchoBeta1.0"
+  //     "teamId":"0001",
+  //     "teamName":"AchoBeta1.0"
   //   },
   //   {
-  //     "positionId":"0002",
-  //     "positionName":"AchoBeta2.0"
+  //     "teamId":"0002",
+  //     "teamName":"AchoBeta2.0"
   //   }
   //  ]
   //  console.log(teams);
@@ -25,9 +28,19 @@
    const lastId = ref('')
    const userId=userStore.userId
    const teamId=ref()
-   teamId.value=userStore.teams[0].teamId
-   const currentTeam=ref()//当前团队名称
-    currentTeam.value=userStore.teams[0].teamName
+  const currentTeam=ref()//当前团队名称
+   if(route.query.teamId){
+      teamId.value=route.query.teamId
+      userStore.teams.forEach(item=>{
+        if(item.teamId===teamId.value){
+          currentTeam.value=item.teamName
+        }
+      })
+   }else{
+      teamId.value=userStore.teams[0].teamId
+      currentTeam.value=userStore.teams[0].teamName
+   }
+  
    const manage = ref([
     // {
     //     userName:'张三',
@@ -158,8 +171,11 @@
   //新增用户
    const toUserInfEdit = () => {
      router.push({
-      path: 'UserAdd'
-     })
+        path:'UserAdd',
+        query:{
+          teamId:teamId.value,
+        }
+      })
    }
  
   //获取团队架构管理树级信息
@@ -167,6 +183,10 @@
     dialogTeam.value = true;
     const res = teamQueryOrganization(userId,teamId.value).then(res =>{
        console.log(res.data);
+       if(res.data.code!==200){
+        dialogTeam.value=false;
+        return
+       }
        Tree1.value=res.data.data.subordinates
        console.log(Tree1.value);
        Tree2.value=''
@@ -445,6 +465,7 @@ const preseve = () =>{
      addPositions.value=[]
      dialogTeam.value=false
      isShow[0].fill(true)
+     if(res.data.code===200)
      ElMessage.success('保存成功')
    }).catch(err =>{
     console.log(err);

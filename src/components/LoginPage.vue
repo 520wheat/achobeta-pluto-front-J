@@ -5,7 +5,7 @@ import {useUserStore} from '@/stores'
 import {userSendcodeService,userLoginService} from '@/api/user.js'
 import FingerprintJS from '@fingerprintjs/fingerprintjs'
 const userStore=useUserStore()
-    if (userStore.accessToken) {
+    if (userStore.accessToken && userStore.refreshToken) {
         router.push('/main')
       console.log(1);
     }
