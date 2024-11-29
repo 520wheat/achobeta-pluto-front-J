@@ -1,15 +1,62 @@
 <script setup>
-  import { ArrowDown } from '@element-plus/icons-vue'
+  import { ArrowDown, Timer } from '@element-plus/icons-vue'
   import { useRouter } from 'vue-router'
+  import { ref } from 'vue'
+  import axios from 'axios'
   import {useUserStore} from '@/stores'
   import {logout} from '@/api/user.js'
-import { ElMessage } from 'element-plus';
+  import { ElMessage } from 'element-plus';
   const router = useRouter()
+  const dialogVisible = ref(false)
   const userStore = useUserStore()
   
+  const userId = userStore.userId;//用户ID
+  const deviceId = userStore.deviceId;//设备ID
+  const ip = sessionStorage.getItem('ip');//IP
+
   const goPersonalCenter = () => {
     router.push('/personalCenter')
   }
+  const goCommonDevice = () => {
+    dialogVisible.value = true
+  }
+  const devices = ref([
+    {
+      id: 1,
+      name: '测试设备1',
+      lastIP: '192.168.1.1',
+      lastLoginTime: '2023-01-01 12:00:00',
+      isCurrent: true
+    },
+    {
+      id: 2,
+      name: '测试设备2',
+      lastIP: '192.168.1.2',
+      lastLoginTime: '2023-01-02 12:00:00',
+      isCurrent: false
+    }
+  ])
+  const logoutStatus = ref(new Map())
+  const logoutDevice = (deviceId) => {
+    console.log('Logging out device:', deviceId)
+    logoutStatus.value.set(deviceId, true)
+  }
+
+  // 获取常用设备
+const getCommonDevice = async () => {
+    const response = await axios.get('/api/v1/device/getDevices',{
+        params:{
+            userId: userId,
+            deviceId: deviceId,
+            limit: 10,
+            lastDeviceId: ''
+        },
+        headers:{}
+    })
+    console.log(11111,response);
+} 
+getCommonDevice();
+
   const loginOut = () =>{
      const res = logout(userStore.deviceId).then(res=>{
       console.log(res.data);
@@ -41,8 +88,8 @@ import { ElMessage } from 'element-plus';
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item @click="goPersonalCenter">个人中心</el-dropdown-item>
-              <el-dropdown-item>常用设备</el-dropdown-item>
-              <el-dropdown-item @click="loginOut()"><span style="text-align: center;" >登出</span></el-dropdown-item>
+              <el-dropdown-item @click="goCommonDevice">常用设备</el-dropdown-item>
+              <el-dropdown-item @click="loginOut()"><span style="text-align: center;" >登出</span></el-dropdown-item>          
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -71,6 +118,67 @@ import { ElMessage } from 'element-plus';
         <router-view></router-view>
       </el-main>
     </el-container>
+
+    <el-dialog
+      v-model="dialogVisible"
+      title="常用设备"
+      width="800px"
+      style="font-weight: bold;"
+    >
+      <span style="font-size: 14px;color: #999;">此处将显示所有您开启了"三十天自动登录"的设备</span>
+      <el-divider></el-divider>
+      
+      <el-table :data="devices" style="width: 100%">
+        <el-table-column label="设备名称" width="180">
+          <template #default="scope">
+            <div style="display: flex; align-items: center">
+              <span>{{ scope.row.name }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        
+        <el-table-column label="上次登录IP" width="180">
+          <template #default="scope">
+            <el-popover effect="light" trigger="hover" placement="top" width="auto">
+              <template #default>
+                <div>设备名称: {{ scope.row.name }}</div>
+                <div>IP地址: {{ scope.row.lastIP }}</div>
+                <div>登录时间: {{ scope.row.lastLoginTime }}</div>
+              </template>
+              <template #reference>
+                <el-tag>{{ scope.row.lastIP }}</el-tag>
+              </template>
+            </el-popover>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="上次登录时间" width="180">
+          <template #default="scope">
+            <div style="display: flex; align-items: center">
+              <el-icon><timer /></el-icon>
+              <span style="margin-left: 10px">{{ scope.row.lastLoginTime }}</span>
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="操作">
+          <template #default="scope">
+            <span v-if="scope.row.isCurrent">当前设备</span>
+            <template v-else>
+              <span v-if="logoutStatus.get(scope.row.id)" style="color: #67C23A">下线成功</span>
+              <el-button
+                v-else
+                size="small"
+                type="danger"
+                @click="logoutDevice(scope.row.id)"
+              >
+                下线
+              </el-button>
+            </template>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
   </el-container>
 </template>
 
@@ -105,6 +213,8 @@ import { ElMessage } from 'element-plus';
   .el-dropdown-link {
     cursor: pointer;
     color: #000;
+    border: none !important; /* 取消边框 */
+    outline: none !important; /* 取消轮廓线 */
   }
   .el-icon-arrow-down {
     font-size: 12px;
@@ -144,4 +254,6 @@ import { ElMessage } from 'element-plus';
   display: flex;
   align-items: center;
 }
+
+/* 弹窗 */
 </style>
