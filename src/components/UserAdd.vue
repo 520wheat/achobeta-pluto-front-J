@@ -3,6 +3,7 @@ import router from '@/router/index.js'
 import {ref,toRaw,toRefs} from 'vue'
 import { useRoute } from 'vue-router';
 import {useUserStore} from '@/stores'
+import {Plus,Minus} from '@element-plus/icons-vue'
 import {teamQueayMember,teamQueryOrganization,teamQueryRoles,teamAddMember} from '@/api/team.js'
 import { formContextKey } from 'element-plus';
 let route = useRoute()
@@ -194,6 +195,7 @@ const save = async () =>{
                 teamId:teamId,
              }
            })
+             ElMessage.success('添加成功')
         }
         
     }).catch(err=>{
@@ -249,8 +251,8 @@ const save = async () =>{
                         <el-select v-model="formModel.belongTeam" placeholder>
                             <el-option v-for="(item,index) in teamArr" :label="item" :value="item"></el-option>
                         </el-select>
-                        <el-button @click="changeAdd()">+</el-button> 
-                        <el-button @click="del()">-</el-button>
+                        <el-button :icon="Plus" @click="changeAdd()"></el-button> 
+                        <el-button :icon="Minus" @click="del()"></el-button>
                     </el-form-item>
                     <span v-else>
                         <p style="font-size: 14px;color: red;margin:0;padding-bottom: 10px;">选择要增加的团队/职位</p>

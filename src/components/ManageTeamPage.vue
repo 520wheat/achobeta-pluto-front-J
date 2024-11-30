@@ -8,27 +8,12 @@
    const userStore = useUserStore()
    let route = useRoute()
    console.log(route.query);
-   //测试用
-  //  const teams = [
-  //   {
-  //     "teamId":"0001",
-  //     "teamName":"AchoBeta1.0"
-  //   },
-  //   {
-  //     "teamId":"0002",
-  //     "teamName":"AchoBeta2.0"
-  //   }
-  //  ]
-  //  console.log(teams);
-  //  userStore.setData("1001",teams,"520")
-  //  console.log(userStore.teams);
-   //测试用
-  //  console.log(userStore.teams[0].positionName);
+   const isManager=ref()//判断是否为管理员
    const dialogTeam = ref(false)
    const lastId = ref('')
    const userId=userStore.userId
-   const teamId=ref()
-  const currentTeam=ref()//当前团队名称
+   const teamId=ref()//团队信息团队Id
+  const currentTeam=ref()//团队信息当前团队名称
    if(route.query.teamId){
       teamId.value=route.query.teamId
       userStore.teams.forEach(item=>{
@@ -40,7 +25,24 @@
       teamId.value=userStore.teams[0].teamId
       currentTeam.value=userStore.teams[0].teamName
    }
-  
+    const manageCurrentTeam=ref()
+  manageCurrentTeam.value=JSON.parse(JSON.stringify(currentTeam.value))//团队架构管理当前团队名称
+ let manageTeamId=teamId.value//团队架构管理团队Id
+
+ //判断当前用户在所选团队是不是管理员
+const currentTeamIsManager = ()=>{
+  userStore.teams.forEach(item=>{
+   if(item.teamId===teamId.value){
+      if(item.permissions.member===1){
+        isManager.value=true;
+      }else{
+        isManager.value=false;
+      }
+   }
+ })
+}
+ currentTeamIsManager();
+ //
    const manage = ref([
     // {
     //     userName:'张三',
@@ -133,14 +135,17 @@
    //查看详情
    const viewDetail = (row,$index) => {
       console.log(row,$index)
-      router.push({
+      if(isManager){
+        router.push({
         path:'UserInfEdit',
         query:{
           memberId:row.userId,
           teamId:teamId.value,
         }
       })
-      
+    }else{
+      console.log('跳转到普通用户查看详情');
+    }
    }
    //删除团队信息的用户
    const deleteTeamMessage = async (row) =>{
@@ -149,7 +154,6 @@
         confirmButtonText:'确认',
         cancelButtonText:'取消'
       })
-      console.log(row.userId);
       const res = teamDeleteMember(userId,row.userId,teamId.value).then(res=>{
         console.log(res.data);
         console.log('删除成功');
@@ -181,7 +185,7 @@
   //获取团队架构管理树级信息
   const teamManage = () =>{
     dialogTeam.value = true;
-    const res = teamQueryOrganization(userId,teamId.value).then(res =>{
+    const res = teamQueryOrganization(userId,manageTeamId).then(res =>{
        console.log(res.data);
        if(res.data.code!==200){
         dialogTeam.value=false;
@@ -200,20 +204,34 @@
         console.log(err);
     })
   }
+  //切换团队架构当前团队
 const manageChangeTeam = (Id,positionName) =>{
-  teamId.value=Id
-  currentTeam.value=positionName
-  console.log(teamId.value);
-  console.log(currentTeam.value);
-  teamManage()
+  userStore.teams.forEach(item=>{
+   if(item.teamId===Id){
+    console.log(Id);
+      if(item.permissions.structure_VIEW===0){
+         ElMessage.error('用户无权限')
+      }else{
+          manageTeamId=Id
+          manageCurrentTeam.value=positionName
+          console.log(manageTeamId);
+          console.log(manageCurrentTeam.value);
+          teamManage()
+      } 
+   }
+ })
 }
+//切换团队信息当前团队
 const messageChangeTeam = (Id,positionName) =>{
    console.log(Id);
    teamId.value=Id
    currentTeam.value=positionName
+    manageCurrentTeam.value=currentTeam.value
+    manageTeamId=teamId.value
    tableData.value=''
    lastId.value=''
    isEmpty.value=false
+   currentTeamIsManager()
    ShowMessage();
 }
 const Tree1 = ref([
@@ -380,9 +398,9 @@ const toggleEdit = (level) =>{
 }
 const creatItem1 = () =>{
   const newNode = {
-  parentPositionId:teamId.value,
+  parentPositionId:manageTeamId,
   positionName:newPositionName.value,
-  parentPositionName:currentTeam.value,
+  parentPositionName:manageCurrentTeam.value,
   level:1,
   subordinates:[]
   }
@@ -419,7 +437,6 @@ const delCompare = (nodes,newNodes) =>{
             "level":node.level,
           }
          )
-        //  console.log(deletePositions.value);
        }
        else{
           delCompare(node.subordinates,t.subordinates);
@@ -459,7 +476,7 @@ const preseve = () =>{
    addCompare(TreeCopy.value,Tree1.value)
    console.log(deletePositions.value);
    console.log(addPositions.value);
-   const res = teamModifyOranization(userId,addPositions.value,deletePositions.value,teamId.value).then(res =>{
+   const res = teamModifyOranization(userId,addPositions.value,deletePositions.value,manageTeamId).then(res =>{
      console.log(res.data);
      deletePositions.value=[]
      addPositions.value=[]
@@ -507,8 +524,8 @@ const reset = () =>{
         </el-dropdown>
         </div>
         <div>
-            <el-button type="info" style="color: black;" @click="teamManage()">团队架构管理</el-button>
-            <el-button color="rgb(0, 122, 255)" @click="toUserInfEdit">新增用户</el-button>
+            <el-button v-if="isManager" type="info" style="color: black;" @click="teamManage()">团队架构管理</el-button>
+            <el-button v-if="isManager" color="rgb(0, 122, 255)" @click="toUserInfEdit">新增用户</el-button>
         </div>
     </div>
      <!-- 团队架构管理内容 -->
@@ -517,7 +534,7 @@ const reset = () =>{
     <div style="padding:5px 0;font-size: 16px;font-weight: 700;">
       <el-dropdown trigger="click" style="line-height: 35px;">
           <span class="el-dropdown-link">
-            <span style="font-weight: bold;">当前团队: {{currentTeam}}</span>
+            <span style="font-weight: bold;">当前团队: {{manageCurrentTeam}}</span>
            <el-icon><ArrowDown /></el-icon>
           </span>
           <template #dropdown>
@@ -617,7 +634,7 @@ const reset = () =>{
         <el-table-column label="操作">
             <template #default="{row,$index}">
                 <el-button type="text" @click="viewDetail(row,$index)">查看详情</el-button>
-                <el-button type="text" @click="deleteTeamMessage(row)" style="color: rgb(245, 108, 108);">删除</el-button>
+                <el-button v-if="isManager" type="text" @click="deleteTeamMessage(row)" style="color: rgb(245, 108, 108);">删除</el-button>
             </template> 
         </el-table-column>
         <template #empty>
@@ -671,6 +688,7 @@ const reset = () =>{
       border-right: 0px;
       height: 430px;
       width: 180px;
+      border-radius: 2px;
       overflow: auto;   /*隐藏y轴元素，以滚轮显示*/
     }
     .tree1 p {

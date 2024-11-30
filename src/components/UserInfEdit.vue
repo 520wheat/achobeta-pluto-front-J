@@ -3,6 +3,7 @@ import router from '@/router/index.js'
 import {ref,toRaw,toRefs} from 'vue'
 import { useRoute } from 'vue-router';
 import {useUserStore} from '@/stores'
+import {Plus,Minus} from '@element-plus/icons-vue'
 import {teamQueayMember,teamQueryOrganization,teamQueryRoles,teamModifyMember} from '@/api/team.js'
 let route = useRoute()
 const userStore = useUserStore()
@@ -198,7 +199,6 @@ const reset = () => {
 const save = async () =>{
     await form.value.validate()
 
-    console.log(teamArr.value);
 //     const UserEditData = {
 //     teamId:teamId,
 //     memberId:memberId,
@@ -231,28 +231,38 @@ const save = async () =>{
     }).catch(err=>{
         console.log(err);
     })
-    // addPositions.value=[]
-    // deletePositions.value=[]
 }
-//获取新增的团队/职位
-// const addCompare = (arr,newarr) =>{
-//   newarr.forEach(newitem =>{
-//      if((arr.find(item => item===newitem))===undefined){
-//         addPositions.value.push(newitem)
-//      }
-//   })
-// }
-//获取删除的团队/职位
-// const delCompare = (arr,newarr) =>{
-//    arr.forEach(item =>{
-//       if((newarr.find(newitem => item === newitem))===undefined){
-//           deletePositions.value.push(item)
-//       }
-//    })
-// }
+  const isLiked = ref(false)
+  const likeCount = ref(0)
+
+// 点赞
+  const toggleLike = async () => {
+    const userId = localStorage.getItem('userId') || '1001'
+    console.log(userId);
+    try {
+      const response = await axios.post('/api/v1/user/like/', {
+        fromId: userId,
+        toId: userId,
+        liked: true
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${userId}`
+        }
+      })
+      console.log(response.data.data);
+      isLiked.value = !isLiked.value
+      likeCount.value = response.data.likeCount
+    } catch (error) {
+      console.error('更新点赞状态失败:', error)
+      ElMessage.error('点赞失败，请稍后重试')
+    }
+}
+
 </script>
 
 <template>
+    <link rel="stylesheet" href="/iconfont/download/font_ttobs1d52z/iconfont.css">
     <el-header class="UserHeader">
     <span style="font-weight: 700;">
         <el-button type="text" text="plain" size="large" @click="toManageTeamPage()" >&lt;</el-button>个人信息
@@ -260,6 +270,14 @@ const save = async () =>{
     <div class="right">
       <el-button type="info" class="cz" @click="reset">重置</el-button>
       <el-button class="bc" color="rgb(0, 122, 255)" @click="save">保存</el-button>
+     <!-- 点赞 -->
+      <span class="dz">
+          <span class="iconfont icon-icon" :class="{ 'liked': isLiked }" @click="toggleLike" :style="{ 
+            color: isLiked ? '#ff0000' : '#000000',
+            cursor: 'pointer'
+          }"></span>
+          <div class="like-count" style="font-size: 10px;">{{ likeCount }}</div>
+      </span>            
     </div>
     </el-header>
     <el-main>
@@ -298,8 +316,8 @@ const save = async () =>{
                         <el-select v-model="formModel.belongTeam" placeholder>
                             <el-option v-for="(item,index) in teamArr" :label="item" :value="item"></el-option>
                         </el-select>
-                        <el-button @click="changeAdd()">+</el-button> 
-                        <el-button @click="del()">-</el-button>
+                        <el-button :icon="Plus" @click="changeAdd()"></el-button> 
+                        <el-button :icon="Minus" @click="del()"></el-button>
                     </el-form-item>
                     <span v-else>
                         <p style="font-size: 14px;color: red;margin:0;padding-bottom: 10px;">选择要增加的团队/职位</p>
@@ -385,9 +403,24 @@ const save = async () =>{
 .cz {
     color: #000;
     width: 80px;
+    margin-top: -10px;
 }
 .bc {
     width: 80px;
+    margin-top: -10px;
 }
-
+.UserHeader .dz{
+  width: 10%;
+  height: 10%;
+  margin-left: 15px;
+}
+.icon-icon{
+    font-size: 35px;
+    font-weight: 700;
+}
+.like-count {
+    margin-left: 200px;
+    font-weight: 700;
+    margin-top: 5px;
+}
 </style>
