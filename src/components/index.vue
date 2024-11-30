@@ -1,5 +1,5 @@
 <script setup>
-  import { ArrowDown, Timer } from '@element-plus/icons-vue'
+  import { ArrowDown, Timer,HomeFilled,UserFilled } from '@element-plus/icons-vue'
   import { useRouter } from 'vue-router'
   import { ref } from 'vue'
   import axios from 'axios'
@@ -9,6 +9,7 @@
   const router = useRouter()
   const dialogVisible = ref(false)
   const userStore = useUserStore()
+  
   const userId = userStore.userId;//用户ID
   const deviceId = userStore.deviceId;//设备ID
   const ip = sessionStorage.getItem('ip');//IP
@@ -59,12 +60,11 @@ getCommonDevice();
   const loginOut = () =>{
      const res = logout(userStore.deviceId).then(res=>{
       console.log(res.data);
-        if(res.data.code===200){
-            userStore.removeToken();
-            userStore.removeData();
-            router.push('/LoginPage')
-            ElMessage.success('登出成功')
-        }
+       router.push('/LoginPage')
+        userStore.removeToken();
+        userStore.removeData();
+        ElMessage.success('登出成功')
+        console.log(userStore.accessToken); 
      }).catch(err=>{
       console.log(err);
      })
@@ -99,16 +99,18 @@ getCommonDevice();
     <el-container>
       <el-aside style="box-shadow:10px 10px 20px rgba(0,0,0,0.2);">
         <el-menu 
-          active-text-color="#ffd04b"
-          text-color="#000"
+          active-text-color="#fff"
+          :default-active="$route.path"
           router
         >
 
           <el-menu-item index="/main">
+            <el-icon><HomeFilled /></el-icon>
             <span>主页</span>
           </el-menu-item> 
 
           <el-menu-item index="/ManageTeamPage">
+            <el-icon><UserFilled /></el-icon>
             <span>团队信息</span>
           </el-menu-item> 
       </el-menu>
@@ -192,11 +194,11 @@ getCommonDevice();
     margin-top: 20px;
     margin-left: 20px;
     margin-right: 20px;
-
+       
     justify-content: space-between;
     align-items: center;
     background-color: #ffffff;
-    color: #333;
+    color: #333333;
     outline: 1px solid #000;
 
     box-shadow:10px 10px 20px rgba(0,0,0,0.2);
@@ -210,6 +212,14 @@ getCommonDevice();
     outline: 1px solid #000;
     border-right: 1px solid #000;
   }
+  .el-menu-item.is-active {
+      background-color: rgb(58, 172, 247) !important;//选中背景色
+      // color: #fff;//选中颜色
+      // span {
+      //   color: #fff !important;
+      // }
+    }
+
   .el-dropdown-link {
     cursor: pointer;
     color: #000;

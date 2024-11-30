@@ -230,7 +230,6 @@
             </div>            
           </div>
         </el-form-item>
-
       </div>
 
       <div class="form-group">

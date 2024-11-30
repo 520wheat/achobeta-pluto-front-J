@@ -5,7 +5,7 @@ import {useUserStore} from '@/stores'
 import {userSendcodeService,userLoginService} from '@/api/user.js'
 import FingerprintJS from '@fingerprintjs/fingerprintjs'
 const userStore=useUserStore()
-    if (userStore.accessToken) {
+    if (userStore.accessToken && userStore.refreshToken) {
         router.push('/main')
       console.log(1);
     }
@@ -101,6 +101,7 @@ const login = () => {
             userStore.setRefreshToken(res.data.data.refreshToken)
             userStore.setData(res.data.data.userId,res.data.data.teams,res.data.data.deviceId)
             router.push('/main')
+            ElMessage.success('登录成功')
          }
          else  ElMessage.error('服务异常')
       }).catch(err=>{
@@ -159,9 +160,11 @@ console.log(userAgent)
    display: flex;
    justify-content: center;
    align-items: center;
-   font-size: 30px;
-   background-color: rgb(50, 173, 230);
+   font-size: 35px;
    color: #fff;
+   background: url('/img/bgc.jpg') no-repeat ;
+   background-size: cover;
+   border-radius: 0 5px 5px 0;
  }
 .form {
     display: flex;

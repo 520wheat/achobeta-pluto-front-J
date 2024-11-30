@@ -65,10 +65,28 @@ export const teamQueayMember = (userId, teamId, memberId) => {
         }
     })
 }
-//修改团队成员信息
-export const teamModifyMember = (teamId, memberId, userId, userName, phone, entryTime, gender, idCard, email, grade, major, studentId, experience, currentStatus, addPositions, deletePositions) => {
+//查询可以支配赋予他人的团队及角色
+export const teamQueryRoles = (userId, teamId) => {
     return request({
-        url: '/api/v1/team/member',
+        url: '/api/v1/auth/role',
+        method: 'get',
+        params: {
+            userId,
+            teamId
+        }
+    })
+}
+//修改团队成员信息
+// export const teamModifyMember = (UserEditData) => {
+//     return request({
+//         url: '/api/v1/team/member/detail',
+//         method: 'put',
+//         data: UserEditData
+//     })
+// }
+export const teamModifyMember = (teamId, memberId, userId, userName, phone, entryTime, gender, idCard, email, grade, major, studentId, experience, currentStatus, roles, positions) => {
+    return request({
+        url: '/api/v1/team/member/detail',
         method: 'put',
         data: {
             teamId,
@@ -85,11 +103,12 @@ export const teamModifyMember = (teamId, memberId, userId, userName, phone, entr
             studentId,
             experience,
             currentStatus,
-            addPositions,
-            deletePositions
+            roles,
+            positions
         }
     })
 }
+
 //删除团队成员
 export const teamDeleteMember = (userId, memberId, teamId) => {
     return request({
