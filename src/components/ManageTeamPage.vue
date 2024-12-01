@@ -4,7 +4,7 @@
    import {Loading,Delete,ArrowDown,Plus, MessageBox} from '@element-plus/icons-vue'
    import {teamQueryOrganization,teamModifyOranization,teamShowMessage,teamDeleteMember} from '@/api/team.js'
    import {useUserStore} from '@/stores'
-   import { useRoute } from 'vue-router';
+   import { onBeforeRouteUpdate, useRoute } from 'vue-router';
    const userStore = useUserStore()
    let route = useRoute()
    console.log(route.query);
@@ -91,7 +91,8 @@ const currentTeamIsManager = ()=>{
          console.log(err);
        })
    }
-   ShowMessage();
+   ShowMessage()
+    
    tableData.value=manage.value
    const container =ref()
    const scrollTopVal=ref(0)
@@ -511,7 +512,7 @@ const reset = () =>{
     <div class="header">
         <div class="left">
         <span style="font-size: 22px;padding: 0 15px;font-weight: 700;">团队信息</span>
-         <el-dropdown trigger="click" style="line-height: 35px;">
+         <el-dropdown style="line-height: 35px;">
           <span class="el-dropdown-link">
             <span style="font-weight: bold;">当前团队: {{ currentTeam }}</span>
            <el-icon><ArrowDown /></el-icon>
@@ -532,7 +533,7 @@ const reset = () =>{
     <el-dialog v-model="dialogTeam" width="900" title="团队架构管理">
     <div style="border-bottom: 1px solid #000;padding-bottom: 5px;color: gray;">支持修改指定团队内部的架构</div>
     <div style="padding:5px 0;font-size: 16px;font-weight: 700;">
-      <el-dropdown trigger="click" style="line-height: 35px;">
+      <el-dropdown style="line-height: 35px;">
           <span class="el-dropdown-link">
             <span style="font-weight: bold;">当前团队: {{manageCurrentTeam}}</span>
            <el-icon><ArrowDown /></el-icon>

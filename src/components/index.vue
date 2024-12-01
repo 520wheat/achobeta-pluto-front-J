@@ -214,10 +214,6 @@ getCommonDevice();
   }
   .el-menu-item.is-active {
       background-color: rgb(58, 172, 247) !important;//选中背景色
-      // color: #fff;//选中颜色
-      // span {
-      //   color: #fff !important;
-      // }
     }
 
   .el-dropdown-link {

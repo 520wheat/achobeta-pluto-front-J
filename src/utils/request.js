@@ -3,7 +3,7 @@ import { useUserStore } from '@/stores'
 import { getRefresh } from '@/api/user.js'
 
 import router from '@/router'
-const baseURL = 'http://wum9je.natappfree.cc'
+const baseURL = 'http://8.134.110.164:8091'
 const userStore = useUserStore()
 const instance = axios.create({
     //基础地址，超时时间
@@ -52,14 +52,17 @@ instance.interceptors.response.use(
                     else if (res.data.code === 6004) {
                         console.log('长token过期');
                         userStore.removeToken()
-                        ElMessage.error('请重新登录')
-                        router.push('/LoginPage')
+                        // ElMessage.error('请重新登录')
+                        // router.push('/LoginPage')
                     }
                     else if (res.data.code === 6003) {
                         console.log('长token缺失');
                         userStore.removeToken()
-                        ElMessage.error('请重新登录')
-                        router.push('/LoginPage')
+                        // ElMessage.error('请重新登录')
+                        // router.push('/LoginPage')
+                    } else if (res.data.code === 6005) {
+                        console.log('长token无效');
+                        userStore.removeToken()
                     }
                 }).catch(err => {
                     console.log(err);

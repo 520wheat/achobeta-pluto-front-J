@@ -56,6 +56,13 @@ const res = teamQueayMember(userId,teamId,memberId).then(res=>{
         }
     }
   }
+  if(res.data.data.gender===1){
+    formModel.value.gender='男'
+  }else if(res.data.data.gender===2){
+    formModel.value.gender='女'
+  }else{
+    formModel.value.gender='未选择'
+  }
 }).catch(err=>{
   console.log(err);
 })
