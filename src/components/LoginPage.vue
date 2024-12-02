@@ -26,7 +26,7 @@ const form = ref()
 const reg=/^[1]([3-9])[0-9]{9}$/
 const codeReg=/^\d{6}$/
 let sending = ref(true);
-let second = ref(5);
+let second = ref(59);
 let codewz = ref('获取验证码')
 let message = ref('')
 const ip= sessionStorage.getItem('ip')
@@ -77,7 +77,7 @@ const sendCode= () => {
          if(second.value<0){
             clearInterval(countId);
             sending.value=true;
-            second.value=5
+            second.value=60
             codewz.value='重新发送'
          }
        },1000)

@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '@/stores'
+
 //配置路由
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -22,7 +24,7 @@ const router = createRouter({
                     component: () => import('@/components/UserInfEdit.vue')
                 },
                 {
-                    path:'/UserAdd',
+                    path: '/UserAdd',
                     component: () => import('@/components/UserAdd.vue')
                 },
                 {
@@ -38,5 +40,28 @@ const router = createRouter({
 
     ]
 })
+//路由全局前置守卫
+const authUrls = ['/main', '/ManageTeamPage', '/UserAdd', '/UserInfEdit','/PersonalCenter']
+router.beforeEach((to, from, next) => {
+    const userStore = useUserStore()
+    if (to.path === '/LoginPage') {
+        next()
+        return
+    }
+    else if (authUrls.includes(to.path)) {
+        if (userStore.refreshToken) {
+            next()
+        } else {
+            ElMessageBox.alert('你的登录状态已失效，请重新登录', '温馨提示', {
+                type: 'warning',
+                confirmButtonText: '返回登陆页面'
+            }).then(res => {
+                next('/LoginPage')
+            }).catch(err => {
+                console.log(err);
+            })
 
+        }
+    }
+})
 export default router
