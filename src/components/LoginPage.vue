@@ -4,11 +4,13 @@ import router from '@/router/index.js'
 import {useUserStore} from '@/stores'
 import {userSendcodeService,userLoginService} from '@/api/user.js'
 import FingerprintJS from '@fingerprintjs/fingerprintjs'
-const userStore=useUserStore()
-    if (userStore.accessToken) {
-        router.push('/main')
-      console.log(1);
-    }
+console.log(sessionStorage.getItem('ip'));
+
+// const userStore=useUserStore()
+//     if (userStore.accessToken) {
+//         router.push('/main')
+//       console.log(1);
+//     }
 //浏览器指纹
 const fingerPrinting=ref('')
 FingerprintJS.load().then(fp => {

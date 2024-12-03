@@ -29,30 +29,30 @@
    const currentTeam=ref()//当前团队名称
     currentTeam.value=userStore.teams[0].teamName
    const manage = ref([
-    // {
-    //     userName:'张三',
-    //     teams:[
-    //       "设计者-设计负责人",
-    //       "研发组-后端组-后端负责人",
-    //       "财务组-财务负责人"
-    //     ],
-    //     grade:'2019',
-    //     major:'网络工程',
-    //     currentStatus:'在校',
-    //     phone:'13025316517'
-    // },
-    // {
-    //     userName:'张三',
-    //     teams:[
-    //       "设计者-设计负责人",
-    //       "研发组-后端组-后端负责人",
-    //       "财务组-财务负责人"
-    //     ],
-    //     grade:'2019',
-    //     major:'网络工程',
-    //     currentStatus:'在校',
-    //     phone:'13025316517'
-    // },
+    {
+        userName:'张三',
+        teams:[
+          "设计者-设计负责人",
+          "研发组-后端组-后端负责人",
+          "财务组-财务负责人"
+        ],
+        grade:'2019',
+        major:'网络工程',
+        currentStatus:'在校',
+        phone:'13025316517'
+    },
+    {
+        userName:'张三',
+        teams:[
+          "设计者-设计负责人",
+          "研发组-后端组-后端负责人",
+          "财务组-财务负责人"
+        ],
+        grade:'2019',
+        major:'网络工程',
+        currentStatus:'在校',
+        phone:'13025316517'
+    },
    ])
     const tableData = ref()
     // const requestMemberListDTO = {
@@ -121,10 +121,11 @@
    const viewDetail = (row,$index) => {
       console.log(row,$index)
       router.push({
-        path:'UserInfEdit',
+        path:'UserInfOnlyRead',//只读
         query:{
           memberId:row.userId,
           teamId:teamId.value,
+          readOnly: true
         }
       })
       
@@ -490,7 +491,7 @@ const reset = () =>{
             <el-button color="rgb(0, 122, 255)" @click="toUserInfEdit">新增用户</el-button>
         </div>
     </div>
-     <!-- 团队架构管理内容 -->
+     <!-- 团���架构管理内容 -->
     <el-dialog v-model="dialogTeam" width="900" title="团队架构管理">
     <div style="border-bottom: 1px solid #000;padding-bottom: 5px;color: gray;">支持修改指定团队内部的架构</div>
     <div style="padding:5px 0;font-size: 16px;font-weight: 700;">

@@ -22,6 +22,10 @@ const router = createRouter({
                     component: () => import('@/components/UserInfEdit.vue')
                 },
                 {
+                    path: '/UserInfOnlyRead',   
+                    component: () => import('@/components/UserInfOnlyRead.vue')
+                },
+                {
                     path:'/UserAdd',
                     component: () => import('@/components/UserAdd.vue')
                 },

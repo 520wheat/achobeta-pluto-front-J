@@ -37,15 +37,15 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/open-apis\/authen\/v1\/authorize/, '')
       },
       '/api/v1': {
-        target: 'http://3jqpu6.natappfree.cc',//个人信息
+        target: 'http://wum9je.natappfree.cc',//个人信息
         changeOrigin: true,
       },
       '/api/v1/announce':{
-        target: 'http://3jqpu6.natappfree.cc',//消息
+        target: 'http://wum9je.natappfree.cc',//消息
         changeOrigin: true,
       },
       '/api/v1/user':{
-        target: 'http://3jqpu6.natappfree.cc',//点赞
+        target: 'http://wum9je.natappfree.cc',//点赞
         changeOrigin: true,
       } 
     }

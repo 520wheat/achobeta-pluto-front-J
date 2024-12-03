@@ -6,6 +6,7 @@ import ElementPlus from 'element-plus'
 import { ElButton, ElTable, ElTableColumn, ElMessage } from 'element-plus'
 import 'element-plus/dist/index.css'
 import { useRoute } from 'vue-router';  
+import {useUserStore} from '@/stores'
 
 /* 飞书多维表格API -- begin */
 //获取app_access_token
@@ -116,31 +117,40 @@ const infContent = ref('');//消息详情内容
 
 const timestamp = ref(0);//时间戳
 let intervalId = null;//定时器ID
-const userToken = localStorage.getItem('userToken');//用户token
-const userId = localStorage.getItem('userId') || '1005';//用户ID
+const userStore = useUserStore()
+const userId = userStore.userId;//用户ID
+const deviceId = userStore.deviceId;//设备ID
+const userToken = userStore.userToken;//用户token
+const ip = sessionStorage.getItem('ip');//IP
 
 //获取一页消息
 const getOneInf = async () => {
     try{
-        const response = await axios.get('/api/v1/announce/getUserAnnounce',{
-            params:{
-                userId:userId,
-                limit: 5,
+        const response = await axios.get('/api/v1/announce/getUserAnnounce', {
+            params: {
+                userId: userId,
+                limit: 5
             },
             headers:{
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${userToken}`
+                'Content-Type': 'application/json'
             }
         });
-        console.log(response.data.data.userAnnounce);
-
-        if(response.data.data.userAnnounce){
-            inf_s.value = [...inf_s.value,...response.data.data.userAnnounce] || [];
+        
+        if(response?.data?.data?.userAnnounce){
+            inf_s.value = [...inf_s.value, ...response.data.data.userAnnounce];
             totalInf.value = inf_s.value.length;
             updateTotalPage();
+        } else {
+            inf_s.value = [];
+            totalInf.value = 0;
+            updateTotalPage();
+            console.log('No announcements found:', response.data);
         }
     }catch(error){  
         console.error('获取所有消息失败:', error);
+        inf_s.value = [];
+        totalInf.value = 0;
+        updateTotalPage();
     } 
 } 
 getOneInf();
@@ -178,14 +188,17 @@ const readAll = () => {
 //单条信息已读
 const readOneInf = async (infId) => {
     console.log(userId,infId);
+    console.log(typeof userId);
+    console.log(typeof infId);
+    
+    
     const response = await axios.post('/api/v1/announce/readUserAnnounce',{
-        data:{
+        data:JSON.stringify({
             userId: userId,
             announceId: infId
-        },
+        }),
         headers:{
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${userToken}`
         }   
     })
     console.log(response);
@@ -359,7 +372,7 @@ const handleCurrentChange = async (page) => {
         </div>
     </div>
 
-    <!-- 添加消息详情弹窗 -->
+    <!-- 添加消息详情弹 -->
     <el-dialog
         v-model="showInfDetail"
         title="消息详情"

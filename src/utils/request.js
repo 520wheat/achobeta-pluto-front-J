@@ -3,7 +3,7 @@ import { useUserStore } from '@/stores'
 import { getRefresh } from '@/api/user.js'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
-const baseURL = 'http://3jqpu6.natappfree.cc'
+const baseURL = 'http://wum9je.natappfree.cc'
 const userStore = useUserStore()
 const instance = axios.create({
     //基础地址，超时时间

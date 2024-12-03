@@ -91,21 +91,22 @@
 // 点赞
   const toggleLike = async () => {
     const userId = localStorage.getItem('userId') || '1001'
-    console.log(userId);
     try {
       const response = await axios.post('/api/v1/user/like/', {
         fromId: userId,
         toId: userId,
-        liked: true
+        liked: !isLiked.value
       }, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${userId}`
         }
       })
-      console.log(response.data.data);
-      isLiked.value = !isLiked.value
-      likeCount.value = response.data.likeCount
+      
+      if (response.data.success) {
+        isLiked.value = !isLiked.value
+        likeCount.value = response.data.likeCount
+      }
     } catch (error) {
       console.error('更新点赞状态失败:', error)
       ElMessage.error('点赞失败，请稍后重试')
@@ -134,6 +135,9 @@
         const userData = response.data.data || {}
         userData.gender = String(userData.gender)
         Object.assign(ruleForm, userData)
+        
+        isLiked.value = userData.isLiked || false
+        likeCount.value = userData.likeCount || 0
       } else {
         throw new Error('Invalid response format')
       }
@@ -388,6 +392,11 @@
 
     .icon-icon{
       font-size: 35px;
+      transition: color 0.3s ease;
+    }
+
+    .icon-icon.liked {
+      color: #ff0000 !important;
     }
 
     .form-experience{
