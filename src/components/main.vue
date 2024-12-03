@@ -6,12 +6,12 @@ import ElementPlus from 'element-plus'
 import { ElButton, ElTable, ElTableColumn, ElMessage } from 'element-plus'
 import 'element-plus/dist/index.css'
 import { useRoute } from 'vue-router';  
-import {useUserStore} from '@/stores'
-
+   import {useUserStore} from '@/stores'
+   const userStore=useUserStore()
 /* 飞书多维表格API -- begin */
 //获取app_access_token
 let getAppAccessToken = async () => {
-    const response = await fetch('/open-apis/auth/v3/app_access_token/internal',{
+    const response = await fetch('open-apis/auth/v3/app_access_token/internal',{
         method: 'POST',
         headers:{
             'Content-Type': "application/json; charset=utf-8"
@@ -46,7 +46,7 @@ let getTenantAccessToken = async () => {
 //查询记录
 let getRecord = async () => {
     const tenantAccessToken = await getTenantAccessToken();
-    const response = await fetch(`/open-apis/bitable/v1/apps/M5l2bHYEiaYq2esmVM1cTyamn5s/tables/tblM1AuOpuhpxBSb/records/search`,{     
+    const response = await fetch(`open-apis/bitable/v1/apps/M5l2bHYEiaYq2esmVM1cTyamn5s/tables/tblM1AuOpuhpxBSb/records/search`,{     
         method: 'POST',
         headers:{
             Authorization: `Bearer ${tenantAccessToken}`,
@@ -117,22 +117,20 @@ const infContent = ref('');//消息详情内容
 
 const timestamp = ref(0);//时间戳
 let intervalId = null;//定时器ID
-const userStore = useUserStore()
+const userToken = userStore.accessToken;//用户token
 const userId = userStore.userId;//用户ID
-const deviceId = userStore.deviceId;//设备ID
-const userToken = userStore.userToken;//用户token
-const ip = sessionStorage.getItem('ip');//IP
 
 //获取一页消息
 const getOneInf = async () => {
     try{
-        const response = await axios.get('/api/v1/announce/getUserAnnounce', {
-            params: {
-                userId: userId,
-                limit: 5
+        const response = await axios.get('http://8.134.110.164:8091/api/v1/announce/getUserAnnounce',{
+            params:{
+                userId:userId,
+                limit: 5,
             },
             headers:{
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'access_token': `${userToken}`
             }
         });
         
@@ -169,10 +167,13 @@ updateTotalPage();
 
 // 全部已读
 const readAllInf = async () => {
-    const response = await axios.post('/api/v1/announce/readAllAnnounce',{
-        params:{
+    const response = await axios.post('http://8.134.110.164:8091/api/v1/announce/readAllAnnounce',{
             userId: userId
-        }
+        },{
+        headers:{
+            'Content-Type': 'application/json',
+            'access_token': `${userToken}`
+        }   
     })
     console.log(response);
 }
@@ -188,17 +189,13 @@ const readAll = () => {
 //单条信息已读
 const readOneInf = async (infId) => {
     console.log(userId,infId);
-    console.log(typeof userId);
-    console.log(typeof infId);
-    
-    
-    const response = await axios.post('/api/v1/announce/readUserAnnounce',{
-        data:JSON.stringify({
+    const response = await axios.post('http://8.134.110.164:8091/api/v1/announce/readUserAnnounce',{
             userId: userId,
             announceId: infId
-        }),
+        },{
         headers:{
             'Content-Type': 'application/json',
+            'access_token': `${userToken}`
         }   
     })
     console.log(response);

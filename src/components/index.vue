@@ -1,39 +1,28 @@
 <script setup>
-  import { ArrowDown, Timer } from '@element-plus/icons-vue'
+  import { ArrowDown, Timer,HomeFilled,UserFilled } from '@element-plus/icons-vue'
   import { useRouter } from 'vue-router'
   import { ref } from 'vue'
   import axios from 'axios'
   import {useUserStore} from '@/stores'
-  import {logout} from '@/api/user.js'
+  import {logout,userMessage} from '@/api/user.js'
   import { ElMessage } from 'element-plus';
   const router = useRouter()
   const dialogVisible = ref(false)
   const userStore = useUserStore()
+  
   const userId = userStore.userId;//用户ID
   const deviceId = userStore.deviceId;//设备ID
+  const userToken=userStore.accessToken
   const ip = sessionStorage.getItem('ip');//IP
 
   const goPersonalCenter = () => {
+    console.log(1);
     router.push('/personalCenter')
   }
   const goCommonDevice = () => {
     dialogVisible.value = true
   }
   const devices = ref([
-    {
-      id: 1,
-      name: '测试设备1',
-      lastIP: '192.168.1.1',
-      lastLoginTime: '2023-01-01 12:00:00',
-      isCurrent: true
-    },
-    {
-      id: 2,
-      name: '测试设备2',
-      lastIP: '192.168.1.2',
-      lastLoginTime: '2023-01-02 12:00:00',
-      isCurrent: false
-    }
   ])
   const logoutStatus = ref(new Map())
   const logoutDevice = (deviceId) => {
@@ -43,32 +32,44 @@
 
   // 获取常用设备
 const getCommonDevice = async () => {
-    const response = await axios.get('/api/v1/device/getDevices',{
+    const response = await axios.get('http://8.134.110.164:8091/api/v1/device/getDevices',{
         params:{
             userId: userId,
             deviceId: deviceId,
             limit: 10,
             lastDeviceId: ''
         },
-        headers:{}
+        headers:{
+             'Content-Type': 'application/json',
+              'access_token': `${userToken}`
+        }
     })
     console.log(11111,response);
-} 
-getCommonDevice();
+    devices.value=response.data.data.userCommonUseDevices
+    console.log(devices.value);
+}
 
+getCommonDevice();
+console.log(devices.value);
   const loginOut = () =>{
      const res = logout(userStore.deviceId).then(res=>{
       console.log(res.data);
-        if(res.data.code===200){
-            userStore.removeToken();
-            userStore.removeData();
-            router.push('/LoginPage')
-            ElMessage.success('登出成功')
-        }
+       router.push('/LoginPage')
+        userStore.removeToken();
+        userStore.removeData();
+        ElMessage.success('登出成功')
+        console.log(userStore.accessToken); 
      }).catch(err=>{
       console.log(err);
      })
   }
+  const userName = ref('')
+  
+  const res = userMessage(userId).then(res=>{
+      userName.value=res.data.data.userName
+  }).catch(err=>{
+    console.log(err);
+  })
 </script>
 
 <template>
@@ -79,7 +80,7 @@ getCommonDevice();
                
         <el-dropdown style="float: right;line-height: 40px;margin-top: 10px;">
           <span class="el-dropdown-link">
-            <span style="font-weight: bold;">欢迎回来，XXX</span>
+            <span style="font-weight: bold;">欢迎回来，{{ userName }}</span>
             
             <el-icon class="el-icon--right">
               <arrow-down />
@@ -99,23 +100,25 @@ getCommonDevice();
     <el-container>
       <el-aside style="box-shadow:10px 10px 20px rgba(0,0,0,0.2);">
         <el-menu 
-          active-text-color="#ffd04b"
-          text-color="#000"
+          active-text-color="#fff"
+          :default-active="$route.path"
           router
         >
 
           <el-menu-item index="/main">
+            <el-icon><HomeFilled /></el-icon>
             <span>主页</span>
           </el-menu-item> 
 
           <el-menu-item index="/ManageTeamPage">
+            <el-icon><UserFilled /></el-icon>
             <span>团队信息</span>
           </el-menu-item> 
       </el-menu>
       </el-aside>
 
       <el-main style="box-shadow:10px 10px 20px rgba(0,0,0,0.2);">
-        <router-view></router-view>
+        <router-view :key="router.fullPath"></router-view>
       </el-main>
     </el-container>
 
@@ -132,7 +135,7 @@ getCommonDevice();
         <el-table-column label="设备名称" width="180">
           <template #default="scope">
             <div style="display: flex; align-items: center">
-              <span>{{ scope.row.name }}</span>
+              <span>{{ scope.row.deviceName }}</span>
             </div>
           </template>
         </el-table-column>
@@ -141,12 +144,12 @@ getCommonDevice();
           <template #default="scope">
             <el-popover effect="light" trigger="hover" placement="top" width="auto">
               <template #default>
-                <div>设备名称: {{ scope.row.name }}</div>
-                <div>IP地址: {{ scope.row.lastIP }}</div>
+                <div>设备名称: {{ scope.row.deviceName }}</div>
+                <div>IP地址: {{ scope.row.ip }}</div>
                 <div>登录时间: {{ scope.row.lastLoginTime }}</div>
               </template>
               <template #reference>
-                <el-tag>{{ scope.row.lastIP }}</el-tag>
+                <el-tag>{{ scope.row.ip }}</el-tag>
               </template>
             </el-popover>
           </template>
@@ -192,11 +195,11 @@ getCommonDevice();
     margin-top: 20px;
     margin-left: 20px;
     margin-right: 20px;
-
+       
     justify-content: space-between;
     align-items: center;
     background-color: #ffffff;
-    color: #333;
+    color: #333333;
     outline: 1px solid #000;
 
     box-shadow:10px 10px 20px rgba(0,0,0,0.2);
@@ -210,6 +213,10 @@ getCommonDevice();
     outline: 1px solid #000;
     border-right: 1px solid #000;
   }
+  .el-menu-item.is-active {
+      background-color: rgb(58, 172, 247) !important;//选中背景色
+    }
+
   .el-dropdown-link {
     cursor: pointer;
     color: #000;

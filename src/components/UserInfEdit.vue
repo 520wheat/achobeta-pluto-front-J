@@ -3,12 +3,15 @@ import router from '@/router/index.js'
 import {ref,toRaw,toRefs} from 'vue'
 import { useRoute } from 'vue-router';
 import {useUserStore} from '@/stores'
-import {teamQueayMember} from '@/api/team.js'
+import {Plus,Minus} from '@element-plus/icons-vue'
+import {teamQueayMember,teamQueryOrganization,teamQueryRoles,teamModifyMember} from '@/api/team.js'
+  import axios from 'axios'
 let route = useRoute()
 const userStore = useUserStore()
+const userToken=userStore.accessToken
 console.log(route.query);
 const formModel=ref({
-   userName: '1',
+   userName: '',
    gender: '',
    entryTime:'',
    idCard:'',
@@ -19,15 +22,21 @@ const formModel=ref({
    studentId:'',
    experience:'',
    currentStatus:'',
-   belongTeam:''
+   belongTeam:'',
+   selectPermission:[]
 })
+const permissionsArr = ref([])//点开管理权限所展示的团队数组名字
+const roles = ref([])//点开管理权限所展示的团队数组
 const teamArr = ref([])//所属全部团队/职位
 const teamArrCopy=ref([])
 const memberId=route.query.memberId //查看的成员id
 const teamId = route.query.teamId //团队id
 const userId = userStore.userId //发起操作的用户id
 const dataCopy = ref({})
+const genderCopy=ref()
 const isAdd=ref(false)
+const firstGender=ref()
+//查询所属全部团队/职位
 const res = teamQueayMember(userId,teamId,memberId).then(res=>{
   console.log(res.data);
   res.data.data.positions.forEach(item =>{
@@ -51,22 +60,82 @@ const res = teamQueayMember(userId,teamId,memberId).then(res=>{
         }
     }
   }
+  firstGender.value=res.data.data.gender
+  if(res.data.data.gender===1){
+    formModel.value.gender='男'
+    genderCopy.value='男'
+  }else if(res.data.data.gender===2){
+    formModel.value.gender='女'
+    genderCopy.value='女'
+  }else{
+    formModel.value.gender='未选择'
+    genderCopy.value='未选择'
+  }
 }).catch(err=>{
   console.log(err);
 })
+//查询可以支配赋予他人的团队及角色
+userStore.teams.forEach(item=>{
+    //看用户有没有权限
+    if(item.permissions.member_MODIFY===1 || item.permissions.super===1){
+    const res2 = teamQueryRoles(userId,teamId).then(res2=>{
+         console.log(res2.data);
+         if(res2.data.data.roles)
+         permissionsArr.value=res2.data.data.roles
+         console.log(permissionsArr.value);
+    }).catch(err=>{
+        console.log(err);
+    })
+  }
+})
+
+const props2 = {
+  checkStrictly: true,
+  multiple: true,
+  label:'roleName',
+  value:'roleName',
+  children:'roles'
+}
+const handleChange2 =(value) =>{
+    console.log(value);
+    roles.value=[]
+    value.forEach(item=>{
+      roles.value.push(item[0])
+  })
+    console.log(roles.value);
+}
+//获取当前用户可以修改哪些团队
+const subordinates = []//添加团队/职位时显示的树级结构
+userStore.teams.forEach(item =>{
+  console.log(item);
+  //看用户有没有权限
+  if(item.permissions.member_MODIFY===1 || item.permissions.super===1){
+      const res =teamQueryOrganization(userId,item.teamId).then(res=>{
+         console.log(res.data);
+         if(res.data.data)
+        subordinates.push(res.data.data)
+         console.log(subordinates);
+      }).catch(err=>{
+        console.log(err);
+      })
+  }
+})
+//
 const toManageTeamPage = () => {
     console.log(1);
-    router.push('/ManageTeamPage')
+    router.push({
+        path:'ManageTeamPage',
+        query:{
+           teamId:teamId,
+        }
+    })
 }
-//
+
 const back = () =>{
    isAdd.value=!isAdd.value
 }
 const changeAdd = () =>{
     isAdd.value=!isAdd.value
-    userStore.teams.forEach(item =>{
-      console.log(item);
-    })
 }
 const props1 = {
   checkStrictly: true,
@@ -83,151 +152,17 @@ const handleChange = (value) => {
   }
   string+=value[value.length-1]
   teamArr.value.push(string)
+  console.log(teamArr.value);
+  formModel.value.belongTeam=teamArr.value[0]
 }
-const subordinates = [
-  
-     {
-        "positionId": "2d52c633-4c3e-4690-ab53-e1fe3cfafd82",
-        "positionName": "团队负责人",
-        "teamId": "0001",
-        "level": 1,
-        "subordinates": []
-      },
-      {
-        "positionId": "55763ceb-8514-4fe0-8408-770929329e45",
-        "positionName": "设计组",
-        "teamId": "0001",
-        "level": 1,
-        "subordinates": [
-          {
-            "positionId": "78c4caed-29f0-498d-9fc4-909f4b9b684e",
-            "positionName": "设计负责人",
-            "teamId": "0001",
-            "level": 2,
-            "subordinates": []
-          },
-          {
-            "positionId": "ba188752-ad2c-4157-89d7-1520bf8d0981",
-            "positionName": "设计师",
-            "teamId": "0001",
-            "level": 2,
-            "subordinates": []
-          }
-        ]
-      },
-      {
-        "positionId": "a93f4af3-9dd4-47a3-a92e-0197ea2f58ae",
-        "positionName": "产品组",
-        "teamId": "0001",
-        "level": 1,
-        "subordinates": [
-          {
-            "positionId": "524c76ac-df9c-484e-8927-ef8981e2bdfb",
-            "positionName": "产品组成员",
-            "teamId": "0001",
-            "level": 2,
-            "subordinates": []
-          },
-          {
-            "positionId": "7f62c83b-5762-4d04-964d-a28f1c9c0d1a",
-            "positionName": "产品负责人",
-            "teamId": "0001",
-            "level": 2,
-            "subordinates": []
-          }
-        ]
-      },
-      {
-        "positionId": "d5bffd9d-4050-4dc4-bb06-b5a4e0fa3bb3",
-        "positionName": "财务组",
-        "teamId": "0001",
-        "level": 1,
-        "subordinates": [
-          {
-            "positionId": "2224d65f-d5a9-49a6-8ce7-99badfe86b95",
-            "positionName": "财务负责人",
-            "teamId": "0001",
-            "level": 2,
-            "subordinates": []
-          },
-          {
-            "positionId": "ea5d0fbb-b039-44f9-a7ba-a62397d2b099",
-            "positionName": "财务助理",
-            "teamId": "0001",
-            "level": 2,
-            "subordinates": []
-          }
-        ]
-      },
-      {
-        "positionId": "d96e97b2-990d-4288-92ec-73dbb8b8427c",
-        "positionName": "研发组",
-        "teamId": "0001",
-        "level": 1,
-        "subordinates": [
-          {
-            "positionId": "80c12e61-6f69-4c80-821c-399afd0251d6",
-            "positionName": "后端组",
-            "teamId": "0001",
-            "level": 2,
-            "subordinates": [
-              {
-                "positionId": "1ed86e92-813f-42e4-a6d8-e5f67cfec151",
-                "positionName": "后端开发工程师",
-                "teamId": "0001",
-                "level": 3,
-                "subordinates": []
-              },
-              {
-                "positionId": "8fc2ee16-e2a1-4ce5-be56-2b57ec5ae66c",
-                "positionName": "后端研发负责人",
-                "teamId": "0001",
-                "level": 3,
-                "subordinates": []
-              }
-            ]
-          },
-          {
-            "positionId": "822842c2-12b3-450b-94ea-0a493220c555",
-            "positionName": "其他组",
-            "teamId": "0001",
-            "level": 2,
-            "subordinates": []
-          },
-          {
-            "positionId": "844a27dc-ecc5-4f9f-812f-1a4d9cdfc6d6",
-            "positionName": "前端组",
-            "teamId": "0001",
-            "level": 2,
-            "subordinates": [
-              {
-                "positionId": "4d21137d-e52c-43bc-bc7f-cd794e38eecb",
-                "positionName": "前端开发工程师",
-                "teamId": "0001",
-                "level": 3,
-                "subordinates": []
-              },
-              {
-                "positionId": "8c53a226-2243-47bf-abb6-d3e8f0b6ef2c",
-                "positionName": "前端研发负责人",
-                "teamId": "0001",
-                "level": 3,
-                "subordinates": []
-              }
-            ]
-          },
-          {
-            "positionId": "d1e51413-244d-4108-8df9-58e54c30f800",
-            "positionName": "研发负责人",
-            "teamId": "0001",
-            "level": 2,
-            "subordinates": []
-          }
-        ]
-      }
-]
+
 //删除团队/职位
-const del = () =>{
+const del= async () =>{
+  await ElMessageBox.confirm('您确定要删除该团队/职位吗','温馨提示',{
+    type: 'warning',
+    confirmButtonText:'确认',
+    cancelButtonText:'取消'
+  })
     console.log(formModel.value.belongTeam);
     for(let i = 0;i<teamArr.value.length;i++){
       if(teamArr.value[i]===formModel.value.belongTeam){
@@ -267,39 +202,72 @@ const reset = () => {
         }
       }
     }
+    formModel.value.gender=genderCopy.value
     teamArr.value=teamArrCopy.value
-    formModel.value.belongTeam=teamArr.value[0]
+    formModel.value.belongTeam=teamArr.value[0]//所属团队默认显示第一个
+    formModel.value.selectPermission=[]//清空选择的管理权限
+    roles.value=[]
 }
 //保存
-const addPositions=ref([])
-const deletePositions=ref([])
+// const addPositions=ref([])
+// const deletePositions=ref([])
+
 const save = async () =>{
-    // await form.value.validate()
-    addCompare(teamArrCopy.value,teamArr.value)
-    delCompare(teamArrCopy.value,teamArr.value)
-    console.log(addPositions.value);
-    console.log(deletePositions.value);
-    console.log(teamArr.value);
-}
-//获取新增的团队/职位
-const addCompare = (arr,newarr) =>{
-  newarr.forEach(newitem =>{
-     if((arr.find(item => item===newitem))===undefined){
-        addPositions.value.push(newitem)
-     }
-  })
-}
-//获取删除的团队/职位
-const delCompare = (arr,newarr) =>{
-   arr.forEach(item =>{
-      if((newarr.find(newitem => item === newitem))===undefined){
-          deletePositions.value.push(item)
+    await form.value.validate()
+    if(formModel.value.gender==='男'||formModel.value.gender==='女'||formModel.value.gender==='未选择'){
+      console.log(firstGender.value);
+      formModel.value.gender=firstGender.value
+      console.log(formModel.value.gender);
+    }
+    console.log(formModel.value.gender);
+    const res = teamModifyMember(teamId,memberId,userId,formModel.value.userName,formModel.value.phone,formModel.value.entryTime,formModel.value.gender,formModel.value.idCard,formModel.value.email,formModel.value.grade,formModel.value.major,formModel.value.studentId,formModel.value.experience,formModel.value.currentStatus,roles.value,teamArr.value).then(res=>{
+        console.log(res.data);
+        if(res.data.code===200){
+          ElMessage.success('保存成功')
+          router.push({
+          path:'ManageTeamPage',
+          query:{
+           teamId:teamId,
+          }
+        })
       }
-   })
+        
+    }).catch(err=>{
+        console.log(err);
+    })
 }
+  const isLiked = ref(false)
+  const likeCount = ref(0)
+
+// 点赞
+  const toggleLike = async () => {
+    // const userId = localStorage.getItem('userId') || '1001'
+    console.log(userId);
+    try {
+      const response = await axios.post('http://8.134.110.164:8091/api/v1/user/like/', {
+        userId: userId,
+        toId: userId,
+        liked: true
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'access_token': `${userToken}`
+        }
+      })
+      console.log(response);
+      isLiked.value = !isLiked.value
+      if(likeCount.value===1) likeCount.value =0
+      else likeCount.value=1
+    } catch (error) {
+      console.error('更新点赞状态失败:', error)
+      ElMessage.error('点赞失败，请稍后重试')
+    }
+  }
+
 </script>
 
 <template>
+    <link rel="stylesheet" href="http://at.alicdn.com/t/c/font_4767707_8kb5lqm36bf.css">
     <el-header class="UserHeader">
     <span style="font-weight: 700;">
         <el-button type="text" text="plain" size="large" @click="toManageTeamPage()" >&lt;</el-button>个人信息
@@ -307,6 +275,14 @@ const delCompare = (arr,newarr) =>{
     <div class="right">
       <el-button type="info" class="cz" @click="reset">重置</el-button>
       <el-button class="bc" color="rgb(0, 122, 255)" @click="save">保存</el-button>
+     <!-- 点赞 -->
+      <span class="dz">
+          <span class="iconfont icon-icon" :class="{ 'liked': isLiked }" @click="toggleLike" :style="{ 
+            color: isLiked ? '#ff0000' : '#000000',
+            cursor: 'pointer'
+          }"></span>
+          <div class="like-count" style="font-size: 10px;">{{ likeCount }}</div>
+      </span>            
     </div>
     </el-header>
     <el-main>
@@ -345,8 +321,8 @@ const delCompare = (arr,newarr) =>{
                         <el-select v-model="formModel.belongTeam" placeholder>
                             <el-option v-for="(item,index) in teamArr" :label="item" :value="item"></el-option>
                         </el-select>
-                        <el-button @click="changeAdd()">+</el-button> 
-                        <el-button @click="del()">-</el-button>
+                        <el-button :icon="Plus" @click="changeAdd()"></el-button> 
+                        <el-button :icon="Minus" @click="del()"></el-button>
                     </el-form-item>
                     <span v-else>
                         <p style="font-size: 14px;color: red;margin:0;padding-bottom: 10px;">选择要增加的团队/职位</p>
@@ -359,10 +335,13 @@ const delCompare = (arr,newarr) =>{
                 </el-col>
                  <el-col :span="7">
                     <el-form-item label="管理权限" label-position="top">
-                        <el-select placeholder="无权限">
-                            <el-option label="男"></el-option>
-                            <el-option label="女"></el-option>
-                        </el-select>
+                        <el-cascader v-model="formModel.selectPermission" :options="permissionsArr"
+                          :props="props2"
+                          collapse-tags
+                          collapse-tags-tooltip
+                          placeholder="未选择"
+                          @change="handleChange2"
+                          clearable />
                     </el-form-item>
                 </el-col>
             </el-row>
@@ -429,9 +408,24 @@ const delCompare = (arr,newarr) =>{
 .cz {
     color: #000;
     width: 80px;
+    margin-top: -10px;
 }
 .bc {
     width: 80px;
+    margin-top: -10px;
 }
-
+.UserHeader .dz{
+  width: 10%;
+  height: 10%;
+  margin-left: 15px;
+}
+.icon-icon{
+    font-size: 35px;
+    font-weight: 700;
+}
+.like-count {
+    margin-left: 200px;
+    font-weight: 700;
+    margin-top: 5px;
+}
 </style>

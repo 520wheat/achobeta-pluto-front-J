@@ -4,13 +4,11 @@ import router from '@/router/index.js'
 import {useUserStore} from '@/stores'
 import {userSendcodeService,userLoginService} from '@/api/user.js'
 import FingerprintJS from '@fingerprintjs/fingerprintjs'
-console.log(sessionStorage.getItem('ip'));
-
-// const userStore=useUserStore()
-//     if (userStore.accessToken) {
-//         router.push('/main')
-//       console.log(1);
-//     }
+const userStore=useUserStore()
+    if (userStore.accessToken && userStore.refreshToken) {
+        router.push('/main')
+      console.log(1);
+    }
 //浏览器指纹
 const fingerPrinting=ref('')
 FingerprintJS.load().then(fp => {
@@ -21,14 +19,14 @@ FingerprintJS.load().then(fp => {
 });
 //整个的用于提交的form数据对象,看接口文档
 const formModel=ref({
-   phone: '13708885777',
+   phone: '',
    code: ''
 })
 const form = ref()
 const reg=/^[1]([3-9])[0-9]{9}$/
 const codeReg=/^\d{6}$/
 let sending = ref(true);
-let second = ref(5);
+let second = ref(59);
 let codewz = ref('获取验证码')
 let message = ref('')
 const ip= sessionStorage.getItem('ip')
@@ -79,7 +77,7 @@ const sendCode= () => {
          if(second.value<0){
             clearInterval(countId);
             sending.value=true;
-            second.value=5
+            second.value=60
             codewz.value='重新发送'
          }
        },1000)
@@ -103,6 +101,7 @@ const login = () => {
             userStore.setRefreshToken(res.data.data.refreshToken)
             userStore.setData(res.data.data.userId,res.data.data.teams,res.data.data.deviceId)
             router.push('/main')
+            ElMessage.success('登录成功')
          }
          else  ElMessage.error('服务异常')
       }).catch(err=>{
@@ -161,9 +160,11 @@ console.log(userAgent)
    display: flex;
    justify-content: center;
    align-items: center;
-   font-size: 30px;
-   background-color: rgb(50, 173, 230);
+   font-size: 35px;
    color: #fff;
+   background: url('/img/bgc.jpg') no-repeat ;
+   background-size: cover;
+   border-radius: 0 5px 5px 0;
  }
 .form {
     display: flex;
