@@ -47,6 +47,7 @@ instance.interceptors.response.use(
                         userStore.setToken(res.data.data.accessToken)
                         console.log('刷新成功');
                         res1.config.headers.access_token = userStore.accessToken
+                        // failedQueue.forEach(prom => prom.resolve(accessToken))
                         return instance.request(res1.config)
                     }
                     else if (res.data.code === 6004) {
@@ -75,10 +76,10 @@ instance.interceptors.response.use(
             ElMessage.error(res1.data.info)
             return res1
         }
-        // else if (res1.data.code === 6013) {
-        //     res1.config.headers.access_token = userStore.accessToken
-        //     return instance.request(res1.config)
-        // }
+        else if (res1.data.code === 6013) {
+            res1.config.headers.access_token = userStore.accessToken
+            return instance.request(res1.config)
+        }
         return res1
     },
     (err) => {

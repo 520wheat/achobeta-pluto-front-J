@@ -5,7 +5,11 @@
   import type { ComponentSize, FormInstance, FormRules } from 'element-plus'
   import axios from 'axios'
   import { ElMessage } from 'element-plus'
-  
+  import {useUserStore} from '../../stores/modules/user.js'
+
+  const userStore=useUserStore()
+    const userToken = userStore.accessToken
+  const userId=userStore.userId
   interface RuleForm {
     userName: string
     gender: string
@@ -58,14 +62,14 @@
       {required: true,message: '请输入邮箱',trigger: 'change',},
       {type: 'email', message: '请输入正确的邮箱格式', trigger: 'change'},
     ],
-    grade:[
-      { required: true, message: '请输入年级', trigger: 'change' },
-      { 
-        pattern: /^20\d{2}$/,
-        message: '请输入有效的年级（如：2023）',
-        trigger: 'change'
-      }
-    ],
+    // grade:[
+    //   // { required: true, message: '请输入年级', trigger: 'change' },
+    //   // { 
+    //   //   pattern: /^20\d{2}$/,
+    //   //   message: '请输入有效的年级（如：2023）',
+    //   //   trigger: 'blur'
+    //   // }
+    // ],
     major: [
       {required: true,message: '请输入专业',trigger: 'change',},
       {min: 1, max: 20, message: '长度应为1到20', trigger: 'change',},
@@ -89,23 +93,25 @@
   const likeCount = ref(0)
 
 // 点赞
+
   const toggleLike = async () => {
-    const userId = localStorage.getItem('userId') || '1001'
+    // const userId = localStorage.getItem('userId') || '1001'
     console.log(userId);
     try {
-      const response = await axios.post('/api/v1/user/like/', {
-        fromId: userId,
+      const response = await axios.post('http://8.134.110.164:8091/api/v1/user/like/', {
+        userId: userId,
         toId: userId,
         liked: true
       }, {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userId}`
+          'access_token': `${userToken}`
         }
       })
-      console.log(response.data.data);
+      console.log(response);
       isLiked.value = !isLiked.value
-      likeCount.value = response.data.likeCount
+      if(likeCount.value===1) likeCount.value =0
+      else likeCount.value=1
     } catch (error) {
       console.error('更新点赞状态失败:', error)
       ElMessage.error('点赞失败，请稍后重试')
@@ -120,17 +126,20 @@
     loading.value = true
     try {
       // 尝试从本地存储获取用户ID
-      const userId = localStorage.getItem('userId') || '1001'
+      // const userId = localStorage.getItem('userId') || '1001'
       // const userId = '1001'
-      const response = await axios.get('/api/v1/user/info', {
+      const response = await axios.get('http://8.134.110.164:8091/api/v1/user/info', {
         params: { userId },
-        headers:{},       
+        headers: {
+          'Content-Type': 'application/json',
+          'access_token': `${userToken}`
+        },      
         timeout: 5000 // 添加超时设置
       })
       
-      console.log(response.data.data);
+      console.log(response.data);
       
-      if (response.data.data) {// 确保数据存在且格式正确       
+      if (response.data.code===200) {// 确保数据存在且格式正确       
         const userData = response.data.data || {}
         userData.gender = String(userData.gender)
         Object.assign(ruleForm, userData)
@@ -168,9 +177,10 @@
       try {
         const response = await axios({
           method: 'put',
-          url: '/api/v1/user/info',
+          url: 'http://8.134.110.164:8091/api/v1/user/info',
           headers: {
             'Content-Type': 'application/json',
+            'access_token': `${userToken}`
           },
           data: ruleForm
         })
@@ -198,7 +208,7 @@
   </script>
 
 <template>
-  <link rel="stylesheet" href="/iconfont/download/font_ttobs1d52z/iconfont.css">
+  <link rel="stylesheet" href="http://at.alicdn.com/t/c/font_4767707_8kb5lqm36bf.css">
     
     <el-form
       ref="ruleFormRef"
