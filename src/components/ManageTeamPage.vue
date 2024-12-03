@@ -136,7 +136,7 @@ const currentTeamIsManager = ()=>{
    //查看详情
    const viewDetail = (row,$index) => {
       console.log(row,$index)
-      if(isManager){
+      if(isManager.value){
         router.push({
         path:'UserInfEdit',
         query:{
@@ -145,7 +145,14 @@ const currentTeamIsManager = ()=>{
         }
       })
     }else{
-      console.log('跳转到普通用户查看详情');
+      console.log(2);
+      router.push({
+        path:'UserInf',
+        query:{
+          memberId:row.userId,
+          teamId:teamId.value
+        }
+      })
     }
    }
    //删除团队信息的用户

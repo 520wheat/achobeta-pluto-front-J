@@ -5,8 +5,10 @@ import { useRoute } from 'vue-router';
 import {useUserStore} from '@/stores'
 import {Plus,Minus} from '@element-plus/icons-vue'
 import {teamQueayMember,teamQueryOrganization,teamQueryRoles,teamModifyMember} from '@/api/team.js'
+  import axios from 'axios'
 let route = useRoute()
 const userStore = useUserStore()
+const userToken=userStore.accessToken
 console.log(route.query);
 const formModel=ref({
    userName: '',
@@ -31,7 +33,9 @@ const memberId=route.query.memberId //查看的成员id
 const teamId = route.query.teamId //团队id
 const userId = userStore.userId //发起操作的用户id
 const dataCopy = ref({})
+const genderCopy=ref()
 const isAdd=ref(false)
+const firstGender=ref()
 //查询所属全部团队/职位
 const res = teamQueayMember(userId,teamId,memberId).then(res=>{
   console.log(res.data);
@@ -56,12 +60,16 @@ const res = teamQueayMember(userId,teamId,memberId).then(res=>{
         }
     }
   }
+  firstGender.value=res.data.data.gender
   if(res.data.data.gender===1){
     formModel.value.gender='男'
+    genderCopy.value='男'
   }else if(res.data.data.gender===2){
     formModel.value.gender='女'
+    genderCopy.value='女'
   }else{
     formModel.value.gender='未选择'
+    genderCopy.value='未选择'
   }
 }).catch(err=>{
   console.log(err);
@@ -194,6 +202,7 @@ const reset = () => {
         }
       }
     }
+    formModel.value.gender=genderCopy.value
     teamArr.value=teamArrCopy.value
     formModel.value.belongTeam=teamArr.value[0]//所属团队默认显示第一个
     formModel.value.selectPermission=[]//清空选择的管理权限
@@ -205,36 +214,24 @@ const reset = () => {
 
 const save = async () =>{
     await form.value.validate()
-
-//     const UserEditData = {
-//     teamId:teamId,
-//     memberId:memberId,
-//     userId:userId,
-//     userName:formModel.value.userName,
-//     phone:formModel.value.phone,
-//     entryTime:formModel.value.entryTime,
-//     gender:formModel.value.gender,
-//     idCard:formModel.value.idCard,
-//     email:formModel.value.email,
-//     grade:formModel.value.grade,
-//     major:formModel.value.major,
-//     studentId:formModel.value.studentId,
-//     experience:formModel.value.experience,
-//     currentStatus:formModel.value.currentStatus,
-//     addPositions:addPositions.value,
-//     deletePositions:deletePositions.value,
-//     roles:roles.value,
-//     teamNames:teamArr.value
-// }
-//     console.log(UserEditData);
+    if(formModel.value.gender==='男'||formModel.value.gender==='女'||formModel.value.gender==='未选择'){
+      console.log(firstGender.value);
+      formModel.value.gender=firstGender.value
+      console.log(formModel.value.gender);
+    }
+    console.log(formModel.value.gender);
     const res = teamModifyMember(teamId,memberId,userId,formModel.value.userName,formModel.value.phone,formModel.value.entryTime,formModel.value.gender,formModel.value.idCard,formModel.value.email,formModel.value.grade,formModel.value.major,formModel.value.studentId,formModel.value.experience,formModel.value.currentStatus,roles.value,teamArr.value).then(res=>{
         console.log(res.data);
-         router.push({
-        path:'ManageTeamPage',
-        query:{
+        if(res.data.code===200){
+          ElMessage.success('保存成功')
+          router.push({
+          path:'ManageTeamPage',
+          query:{
            teamId:teamId,
-        }
-      })
+          }
+        })
+      }
+        
     }).catch(err=>{
         console.log(err);
     })
@@ -244,32 +241,33 @@ const save = async () =>{
 
 // 点赞
   const toggleLike = async () => {
-    const userId = localStorage.getItem('userId') || '1001'
+    // const userId = localStorage.getItem('userId') || '1001'
     console.log(userId);
     try {
-      const response = await axios.post('/api/v1/user/like/', {
-        fromId: userId,
+      const response = await axios.post('http://8.134.110.164:8091/api/v1/user/like/', {
+        userId: userId,
         toId: userId,
         liked: true
       }, {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userId}`
+          'access_token': `${userToken}`
         }
       })
-      console.log(response.data.data);
+      console.log(response);
       isLiked.value = !isLiked.value
-      likeCount.value = response.data.likeCount
+      if(likeCount.value===1) likeCount.value =0
+      else likeCount.value=1
     } catch (error) {
       console.error('更新点赞状态失败:', error)
       ElMessage.error('点赞失败，请稍后重试')
     }
-}
+  }
 
 </script>
 
 <template>
-    <link rel="stylesheet" href="/iconfont/download/font_ttobs1d52z/iconfont.css">
+    <link rel="stylesheet" href="http://at.alicdn.com/t/c/font_4767707_8kb5lqm36bf.css">
     <el-header class="UserHeader">
     <span style="font-weight: 700;">
         <el-button type="text" text="plain" size="large" @click="toManageTeamPage()" >&lt;</el-button>个人信息

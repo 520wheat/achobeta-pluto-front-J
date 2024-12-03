@@ -43,3 +43,13 @@ export const logout = (deviceId) => {
         }
     })
 }
+//个人中心信息页面接口
+export const userMessage = (userId) => {
+    return request({
+        url: '/api/v1/user/info',
+        method: 'get',
+        params: {
+            userId
+        }
+    })
+}

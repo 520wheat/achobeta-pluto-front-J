@@ -40,10 +40,11 @@ declare module 'vue' {
     LoginPage: typeof import('./src/components/LoginPage.vue')['default']
     Main: typeof import('./src/components/main.vue')['default']
     ManageTeamPage: typeof import('./src/components/ManageTeamPage.vue')['default']
-    PersonalCenter: typeof import('./src/components/personalCenter.vue')['default']
+    PersonalCenter: typeof import('./src/components/menuView/personalCenter.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     UserAdd: typeof import('./src/components/UserAdd.vue')['default']
+    UserInf: typeof import('./src/components/UserInf.vue')['default']
     UserInfEdit: typeof import('./src/components/UserInfEdit.vue')['default']
   }
 }

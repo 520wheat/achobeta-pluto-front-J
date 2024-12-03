@@ -19,7 +19,7 @@ FingerprintJS.load().then(fp => {
 });
 //整个的用于提交的form数据对象,看接口文档
 const formModel=ref({
-   phone: '13708885777',
+   phone: '',
    code: ''
 })
 const form = ref()

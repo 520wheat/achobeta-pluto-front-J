@@ -24,24 +24,28 @@ const router = createRouter({
                     component: () => import('@/components/UserInfEdit.vue')
                 },
                 {
+                    path: '/UserInf',
+                    component: () => import('@/components/UserInf.vue')
+                },
+                {
                     path: '/UserAdd',
                     component: () => import('@/components/UserAdd.vue')
                 },
                 {
-                    path: '/PersonalCenter',
-                    component: () => import('@/components/menuView/PersonalCenter.vue')
+                    path: '/personalCenter',
+                    component: () => import('@/components/menuView/personalCenter.vue')
                 },
                 {
                     path: '/LoginPage',
                     component: () => import('@/components/LoginPage.vue')
-                }
+                },
             ]
         }
 
     ]
 })
 //路由全局前置守卫
-const authUrls = ['/main', '/ManageTeamPage', '/UserAdd', '/UserInfEdit','/PersonalCenter']
+const authUrls = ['/main', '/ManageTeamPage', '/UserAdd', '/UserInfEdit', '/personalCenter']
 router.beforeEach((to, from, next) => {
     const userStore = useUserStore()
     if (to.path === '/LoginPage') {
